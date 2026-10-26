@@ -1,0 +1,5 @@
+# Compila "price" (IVA esclusa), "source" (URL listino) e "verified" (data). Le voci con price: null vengono ignorate.
+entries:
+  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA L40S 48GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}
+  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA A100 80GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}
+  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA H100 80GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}

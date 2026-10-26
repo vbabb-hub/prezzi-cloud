@@ -1,0 +1,72 @@
+from common import get, vm, usd_eur, TIERS
+
+REGIONS = ["eu-south-1", "eu-central-1"]   # Milano, Francoforte
+FAMILIES = ("m6i", "m7i")                  # general purpose, 4 GB/vCPU
+BASE = "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/{}/index.json"
+
+
+_EXTRA = []
+
+
+def _usd(d, sku):
+    return [(pd.get("beginRange"), float(pd["pricePerUnit"]["USD"])) for t in d["terms"]["OnDemand"].get(sku, {}).values()
+            for pd in t["priceDimensions"].values()]
+
+
+def collect():
+    fx, out = usd_eur(), []
+    _EXTRA.clear()
+    for region in REGIONS:
+        d = get(BASE.format(region)).json()
+        for sku, p in d["products"].items():
+            a = p.get("attributes", {})
+            if p.get("productFamily") == "Storage" and a.get("volumeApiName") == "gp3":
+                v = [u for _, u in _usd(d, sku) if u > 0]
+                if v:
+                    _EXTRA.append(dict(provider="AWS", region=region, kind="storage", sku="EBS gp3", unit="EUR/GB/mese",
+                                       price=round(v[0] * fx, 5), source=BASE.format(region)))
+                continue
+            if p.get("productFamily") == "Data Transfer" and a.get("transferType") == "AWS Outbound" and a.get("toLocation") == "External":
+                v = sorted((float(b or 0), u) for b, u in _usd(d, sku) if u > 0)
+                if v:
+                    _EXTRA.append(dict(provider="AWS", region=region, kind="rete", sku="Data transfer out (Internet)",
+                                       unit="EUR/TB", price=round(v[0][1] * fx * 1000, 3), source=BASE.format(region)))
+                continue
+            if p.get("productFamily") != "Compute Instance":
+                continue
+            if (a.get("operatingSystem"), a.get("tenancy"), a.get("preInstalledSw"), a.get("capacitystatus")) != ("Linux", "Shared", "NA", "Used"):
+                continue
+            it = a.get("instanceType", "")
+            if it.split(".")[0] not in FAMILIES or int(a["vcpu"]) not in TIERS:
+                continue
+            usd = [float(pd["pricePerUnit"]["USD"]) for t in d["terms"]["OnDemand"].get(sku, {}).values()
+                   for pd in t["priceDimensions"].values()]
+            usd = [u for u in usd if u > 0]
+            if usd:
+                out.append(vm("AWS", region, it, int(a["vcpu"]), float(a["memory"].split()[0].replace(",", "")),
+                              usd[0] * fx, source=BASE.format(region)))
+        del d
+    return out
+
+
+def extra():
+    return list(_EXTRA)
+
+
+S3 = "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/{}/index.json"
+
+
+def s3():
+    fx, out = usd_eur(), []
+    for region in REGIONS:
+        d = get(S3.format(region)).json()
+        for sku, p in d["products"].items():
+            a = p.get("attributes", {})
+            if p.get("productFamily") == "Storage" and a.get("storageClass") == "General Purpose" and a.get("volumeType") == "Standard":
+                v = sorted((float(b or 0), u) for b, u in _usd(d, sku) if u > 0)
+                if v:
+                    out.append(dict(provider="AWS", region=region, kind="storage", sku="S3 Standard (object)", unit="EUR/GB/mese",
+                                    price=round(v[0][1] * fx, 5), source=S3.format(region)))
+                break
+        del d
+    return out

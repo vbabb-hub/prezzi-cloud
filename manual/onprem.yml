@@ -1,0 +1,10 @@
+# Compila "price" (IVA esclusa), "source" (URL listino) e "verified" (data). Le voci con price: null vengono ignorate.
+entries:
+  - {provider: "Proxmox VE", kind: licenza, region: "IT", sku: "Subscription Community (per socket/anno)", unit: "EUR/socket/anno", price: null, source: "", verified: null}
+  - {provider: "Proxmox VE", kind: licenza, region: "IT", sku: "Subscription Basic (per socket/anno)", unit: "EUR/socket/anno", price: null, source: "", verified: null}
+  - {provider: "Proxmox VE", kind: licenza, region: "IT", sku: "Subscription Standard (per socket/anno)", unit: "EUR/socket/anno", price: null, source: "", verified: null}
+  - {provider: "Proxmox VE", kind: licenza, region: "IT", sku: "Subscription Premium (per socket/anno)", unit: "EUR/socket/anno", price: null, source: "", verified: null}
+  - {provider: "VMware", kind: licenza, region: "IT", sku: "vSphere Foundation (per core/anno)", unit: "EUR/core/anno", price: null, source: "", verified: null}
+  - {provider: "VMware", kind: licenza, region: "IT", sku: "Cloud Foundation (per core/anno)", unit: "EUR/core/anno", price: null, source: "", verified: null}
+  - {provider: "Nutanix", kind: licenza, region: "IT", sku: "NCI Pro (per core/anno)", unit: "EUR/core/anno", price: null, source: "", verified: null}
+  - {provider: "Nutanix", kind: licenza, region: "IT", sku: "NCI Ultimate (per core/anno)", unit: "EUR/core/anno", price: null, source: "", verified: null}

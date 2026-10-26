@@ -1,0 +1,3 @@
+# Hetzner Object Storage: non incluso nell'API prezzi usata dal collector
+entries:
+  - {provider: "Hetzner", kind: storage, region: "EU", sku: "Object Storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}

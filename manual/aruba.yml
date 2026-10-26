@@ -1,0 +1,8 @@
+# Compila "price" (IVA esclusa), "source" (URL listino) e "verified" (data). Le voci con price: null vengono ignorate.
+entries:
+  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 2 vCPU / 8 GB", vcpu: 2, ram_gb: 8, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 4 vCPU / 16 GB", vcpu: 4, ram_gb: 16, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 8 vCPU / 32 GB", vcpu: 8, ram_gb: 32, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", kind: storage, region: "IT", sku: "Block storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", kind: storage, region: "IT", sku: "Object storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", kind: rete, region: "IT", sku: "Traffico in uscita", unit: "EUR/TB", price: null, source: "", verified: null}

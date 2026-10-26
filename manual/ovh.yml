@@ -1,0 +1,3 @@
+# OVHcloud: traffico in uscita (verifica sul listino se incluso; se sì metti price: 0)
+entries:
+  - {provider: "OVHcloud", kind: rete, region: "catalogo IT", sku: "Traffico in uscita", unit: "EUR/TB", price: null, source: "", verified: null}
