@@ -1,8 +1,16 @@
-# Compila "price" (IVA esclusa), "source" (URL listino) e "verified" (data). Le voci con price: null vengono ignorate.
+# Aruba Cloud: OpenStack Cloud Server Linux, prezzi mensili IVA esclusa, inclusi storage NVMe e traffico illimitato (esclusi IP e licenze).
+# Fonte: cloud.it (listino pubblico). Object storage: da compilare.
 entries:
-  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 2 vCPU / 8 GB", vcpu: 2, ram_gb: 8, unit: "EUR/mese", price: null, source: "", verified: null}
-  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 4 vCPU / 16 GB", vcpu: 4, ram_gb: 16, unit: "EUR/mese", price: null, source: "", verified: null}
-  - {provider: "Aruba Cloud", kind: compute, region: "IT", sku: "VM 8 vCPU / 32 GB", vcpu: 8, ram_gb: 32, unit: "EUR/mese", price: null, source: "", verified: null}
-  - {provider: "Aruba Cloud", kind: storage, region: "IT", sku: "Block storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
-  - {provider: "Aruba Cloud", kind: storage, region: "IT", sku: "Object storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
-  - {provider: "Aruba Cloud", kind: rete, region: "IT", sku: "Traffico in uscita", unit: "EUR/TB", price: null, source: "", verified: null}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O2A4", vcpu: 2, ram_gb: 4, unit: "EUR/mese", price: 20.1, price_hour: 0.029, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 80 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O4A8", vcpu: 4, ram_gb: 8, unit: "EUR/mese", price: 31.2, price_hour: 0.045, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 120 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O8A16", vcpu: 8, ram_gb: 16, unit: "EUR/mese", price: 55.5, price_hour: 0.08, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 160 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O16A32", vcpu: 16, ram_gb: 32, unit: "EUR/mese", price: 152.6, price_hour: 0.22, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 360 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O2A8R", vcpu: 2, ram_gb: 8, unit: "EUR/mese", price: 25.7, price_hour: 0.037, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 80 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O4A16R", vcpu: 4, ram_gb: 16, unit: "EUR/mese", price: 41.6, price_hour: 0.06, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 120 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "compute", sku: "OpenStack PRO O8A32R", vcpu: 8, ram_gb: 32, unit: "EUR/mese", price: 76.3, price_hour: 0.11, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incl. 160 GB NVMe, traffico illimitato"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "storage", sku: "Block Storage Standard (Availability Zone)", unit: "EUR/GB/mese", price: 0.0365, source: "https://www.cloud.it/cloud-storage/cloud-block-storage", verified: "2026-10-26"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "storage", sku: "Block Storage Standard (Regional)", unit: "EUR/GB/mese", price: 0.0584, source: "https://www.cloud.it/cloud-storage/cloud-block-storage", verified: "2026-10-26"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "storage", sku: "Block Storage Performance (Availability Zone)", unit: "EUR/GB/mese", price: 0.0657, source: "https://www.cloud.it/cloud-storage/cloud-block-storage", verified: "2026-10-26"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "storage", sku: "Block Storage Performance (Regional)", unit: "EUR/GB/mese", price: 0.0949, source: "https://www.cloud.it/cloud-storage/cloud-block-storage", verified: "2026-10-26"}
+  - {provider: "Aruba Cloud", region: "Italia", kind: "rete", sku: "Traffico (illimitato nei Cloud Server)", unit: "EUR/TB", price: 0, source: "https://www.cloud.it/openstack-cloud-server/", verified: "2026-10-26", note: "incluso nel prezzo del server"}
+  - {provider: "Aruba Cloud", kind: "storage", region: "Italia", sku: "Object storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
