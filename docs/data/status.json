@@ -1,0 +1,67 @@
+{
+ "azure": {
+  "ok": true,
+  "count": 160,
+  "date": "2026-10-26"
+ },
+ "azure+": {
+  "ok": true,
+  "count": 2,
+  "date": "2026-10-26"
+ },
+ "aws": {
+  "ok": true,
+  "count": 16,
+  "date": "2026-10-26"
+ },
+ "aws+": {
+  "ok": true,
+  "count": 2,
+  "date": "2026-10-26"
+ },
+ "aws-s3": {
+  "ok": true,
+  "count": 2,
+  "date": "2026-10-26"
+ },
+ "ovh": {
+  "ok": true,
+  "count": 8,
+  "date": "2026-10-26"
+ },
+ "ovh+": {
+  "ok": true,
+  "count": 9,
+  "date": "2026-10-26"
+ },
+ "gcp": {
+  "ok": false,
+  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "count": 0,
+  "date": null
+ },
+ "gcp+": {
+  "ok": false,
+  "error": "nessun record restituito",
+  "count": 0,
+  "date": null
+ },
+ "gcp-gcs": {
+  "ok": false,
+  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "count": 0,
+  "date": null
+ },
+ "hetzner": {
+  "ok": false,
+  "error": "HCLOUD_TOKEN non impostato (secret GitHub)",
+  "count": 0,
+  "date": null
+ },
+ "manual": {
+  "ok": true,
+  "count": 0,
+  "date": "2026-10-26",
+  "da_compilare": 25
+ }
+}
