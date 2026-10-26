@@ -17,7 +17,12 @@ def usd_eur():
         return float(get("https://open.er-api.com/v6/latest/USD").json()["rates"]["EUR"])
 
 
-def vm(provider, region, sku, vcpu, ram, hourly, monthly=None, source=""):
-    return dict(provider=provider, region=region, kind="compute", sku=sku, vcpu=vcpu, ram_gb=ram,
+def vm(provider, region, sku, vcpu, ram, hourly, monthly=None, source="", term=None, note=None):
+    r = dict(provider=provider, region=region, kind="compute", sku=sku, vcpu=vcpu, ram_gb=ram,
                 unit="EUR/mese", price=round(monthly if monthly is not None else hourly * HOURS, 4),
                 price_hour=round(hourly, 6), source=source)
+    if term:
+        r["term"] = term
+    if note:
+        r["note"] = note
+    return r

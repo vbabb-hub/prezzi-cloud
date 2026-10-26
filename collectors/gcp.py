@@ -1,4 +1,4 @@
-import os
+import os, re
 from common import get, vm, TIERS
 
 SVC = "https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus"   # Compute Engine
@@ -76,3 +76,20 @@ def gcs():
             best[next(iter(regs))] = _tiers(s)[0]
     return [dict(provider="GCP", region=r, kind="storage", sku="Cloud Storage Standard (object)", unit="EUR/GB/mese",
                  price=v, source=GCS) for r, v in best.items() if v > 0]
+
+
+CUD = re.compile(r"^Commitment v1: N2 (Cpu|Ram) in (.+) for (1|3) Years?$")
+
+
+def cud():
+    key = os.environ.get("GCP_API_KEY")
+    if not key:
+        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+    core, ram = {}, {}
+    for s in _skus(key):
+        m = CUD.match(s["description"])
+        regs = set(s.get("serviceRegions", [])) & set(REGIONS)
+        if m and regs:
+            (core if m.group(1) == "Cpu" else ram)[(next(iter(regs)), m.group(3) + "y")] = _tiers(s)[0]
+    return [vm("GCP", r, f"n2-standard-{n}", n, n * 4, n * core[(r, t)] + n * 4 * ram[(r, t)], source=SVC, term=t,
+               note="Committed Use Discount") for (r, t) in core if (r, t) in ram for n in sorted(TIERS)]

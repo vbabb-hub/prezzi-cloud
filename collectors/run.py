@@ -16,8 +16,8 @@ prev = load(DATA / "latest.json", {"records": []})["records"]
 old_status = load(DATA / "status.json", {})
 status, records = {}, []
 
-SOURCES = (("azure", azure.collect), ("azure+", azure.extra), ("aws", aws.collect), ("aws+", aws.extra), ("aws-s3", aws.s3),
-           ("ovh", ovh.collect), ("ovh+", ovh.extra), ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-gcs", gcp.gcs), ("hetzner", hetzner.collect))
+SOURCES = (("azure", azure.collect), ("azure+", azure.extra), ("azure-ri", azure.reserved), ("aws", aws.collect), ("aws+", aws.extra), ("aws-s3", aws.s3),
+           ("ovh", ovh.collect), ("ovh+", ovh.extra), ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-cud", gcp.cud), ("gcp-gcs", gcp.gcs), ("hetzner", hetzner.collect))
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
     try:
@@ -50,7 +50,7 @@ status["manual"] = dict(ok=True, count=manual, date=today, da_compilare=len(todo
 
 series = load(DATA / "series.json", {})
 for r in records:
-    r["key"] = "|".join(str(r.get(k, "")) for k in ("provider", "region", "kind", "sku"))
+    r["key"] = "|".join(str(r.get(k, "")) for k in ("provider", "region", "kind", "sku")) + ("|" + r["term"] if r.get("term") else "")
     s = series.setdefault(r["key"], [])
     if not r.get("stale") and (not s or s[-1][1] != r["price"]):
         s.append([today, r["price"]])

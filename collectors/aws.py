@@ -45,6 +45,14 @@ def collect():
             if usd:
                 out.append(vm("AWS", region, it, int(a["vcpu"]), float(a["memory"].split()[0].replace(",", "")),
                               usd[0] * fx, source=BASE.format(region)))
+            for off in d["terms"].get("Reserved", {}).get(sku, {}).values():
+                ta = off.get("termAttributes", {})
+                term = {"1yr": "1y", "3yr": "3y"}.get(ta.get("LeaseContractLength"))
+                if term and ta.get("OfferingClass") == "standard" and ta.get("PurchaseOption") == "No Upfront":
+                    hr = [float(pd["pricePerUnit"]["USD"]) for pd in off["priceDimensions"].values() if pd.get("unit") == "Hrs"]
+                    if hr and hr[0] > 0:
+                        out.append(vm("AWS", region, it, int(a["vcpu"]), float(a["memory"].split()[0].replace(",", "")),
+                                      hr[0] * fx, source=BASE.format(region), term=term, note="Reserved Standard, senza anticipo"))
         del d
     return out
 

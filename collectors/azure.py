@@ -58,3 +58,21 @@ def extra():
         out.append(dict(provider="Azure", region="Zone 1 (Europa)", kind="rete", sku="Data transfer out (Internet)",
                         unit="EUR/TB", price=round(min(p) * 1000, 3), source=URL))
     return out
+
+
+def reserved():
+    best = {}
+    for region in REGIONS:
+        for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Reservation'"):
+            m = RX.match(i.get("armSkuName", ""))
+            t = {"1 Year": ("1y", 12), "3 Years": ("3y", 36)}.get(i.get("reservationTerm"))
+            if not m or not t or i["retailPrice"] <= 0:
+                continue
+            fam, n, ver = m.group(1), int(m.group(2)), m.group(3)
+            if (fam in "DE" and ver != "5") or (fam == "F" and ver != "2") or n not in TIERS:
+                continue
+            k, p = (region, i["armSkuName"], t[0]), i["retailPrice"] / t[1]   # prezzo totale del termine / mesi
+            if k not in best or p < best[k][0]:
+                best[k] = (p, n, fam)
+    return [vm("Azure", r, s.replace("Standard_", ""), n, n * GB_PER_VCPU[f], p / 730, monthly=p, source=URL, term=t,
+               note="Reservation") for (r, s, t), (p, n, f) in best.items()]
