@@ -9,9 +9,14 @@
   "count": 2,
   "date": "2026-10-26"
  },
+ "azure-ri": {
+  "ok": true,
+  "count": 304,
+  "date": "2026-10-26"
+ },
  "aws": {
   "ok": true,
-  "count": 16,
+  "count": 48,
   "date": "2026-10-26"
  },
  "aws+": {
@@ -46,6 +51,12 @@
   "count": 0,
   "date": null
  },
+ "gcp-cud": {
+  "ok": false,
+  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "count": 0,
+  "date": null
+ },
  "gcp-gcs": {
   "ok": false,
   "error": "GCP_API_KEY non impostato (secret GitHub)",
@@ -60,7 +71,7 @@
  },
  "manual": {
   "ok": true,
-  "count": 33,
+  "count": 40,
   "date": "2026-10-26",
   "da_compilare": 10
  }
