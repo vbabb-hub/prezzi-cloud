@@ -26,7 +26,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stat summary{cursor:pointer}
 #status{margin-top:8px;line-height:1.7}
 #status .bad{color:var(--up)}
-main{padding:0 32px 56px;max-width:1040px;width:100%}
+main{
+ min-width: 0; /* <-- AGGIUNGI QUESTA RIGA */
+ padding:0 32px 56px;max-width:1040px;width:100%}
 .top{display:flex;align-items:center;gap:12px;padding:calc(22px + env(safe-area-inset-top)) 0 14px}
 .top h1{flex:1;margin:0;font:600 28px/1.15 var(--serif);letter-spacing:-.01em}
 #burger{display:none;border:1px solid var(--line);background:var(--panel);border-radius:10px;width:40px;height:40px;padding:0}
