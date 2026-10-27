@@ -1,6 +1,8 @@
 from common import get, vm, usd_eur, TIERS
 
-REGIONS = ["eu-south-1", "eu-central-1"]   # Milano, Francoforte
+REGIONS = ["eu-south-1", "eu-central-1", "eu-west-1"]   # Milano, Francoforte, Irlanda (più modelli GPU)
+GPU_FAM = {"p5": "NVIDIA H100 80GB", "p4de": "NVIDIA A100 80GB", "p4d": "NVIDIA A100 40GB", "g6e": "NVIDIA L40S 48GB",
+           "g6": "NVIDIA L4 24GB", "g5": "NVIDIA A10G 24GB"}
 FAMILIES = ("m6i", "m7i")                  # general purpose, 4 GB/vCPU
 BASE = "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/{}/index.json"
 
@@ -37,6 +39,14 @@ def collect():
             if (a.get("operatingSystem"), a.get("tenancy"), a.get("preInstalledSw"), a.get("capacitystatus")) != ("Linux", "Shared", "NA", "Used"):
                 continue
             it = a.get("instanceType", "")
+            ngpu = int(a.get("gpu") or 0) if str(a.get("gpu") or "0").isdigit() else 0
+            if it.split(".")[0] in GPU_FAM and ngpu:
+                u = [x for _, x in _usd(d, sku) if x > 0]
+                if u:
+                    out.append(dict(provider="AWS", region=region, kind="gpu", sku=GPU_FAM[it.split(".")[0]], unit="EUR/ora",
+                                    price=round(u[0] * fx / ngpu, 4), source=BASE.format(region),
+                                    note=f"{it}: {ngpu} GPU, include vCPU e RAM"))
+                continue
             if it.split(".")[0] not in FAMILIES or int(a["vcpu"]) not in TIERS:
                 continue
             usd = [float(pd["pricePerUnit"]["USD"]) for t in d["terms"]["OnDemand"].get(sku, {}).values()

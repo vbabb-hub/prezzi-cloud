@@ -93,3 +93,26 @@ def cud():
             (core if m.group(1) == "Cpu" else ram)[(next(iter(regs)), m.group(3) + "y")] = _tiers(s)[0]
     return [vm("GCP", r, f"n2-standard-{n}", n, n * 4, n * core[(r, t)] + n * 4 * ram[(r, t)], source=SVC, term=t,
                note="Committed Use Discount") for (r, t) in core if (r, t) in ram for n in sorted(TIERS)]
+
+
+GPU_RX = re.compile(r"^Nvidia (?:Tesla )?(A100 80GB|A100|H100 80GB|L4|L40S) GPU running in (.+)$")
+GPU_MODEL = {"A100": "NVIDIA A100 40GB", "A100 80GB": "NVIDIA A100 80GB", "H100 80GB": "NVIDIA H100 80GB", "L4": "NVIDIA L4 24GB", "L40S": "NVIDIA L40S 48GB"}
+GPU_REGIONS = {"europe-west4", "europe-west3", "europe-west1", "europe-west8"}
+
+
+def gpu():
+    key = os.environ.get("GCP_API_KEY")
+    if not key:
+        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+    best = {}
+    for s in _skus(key):
+        m = GPU_RX.match(s["description"])
+        regs = set(s.get("serviceRegions", [])) & GPU_REGIONS
+        if not m or not regs or s.get("category", {}).get("usageType") != "OnDemand":
+            continue
+        r, p = next(iter(regs)), _tiers(s)[0]
+        k = (r, m.group(1))
+        if p > 0 and (k not in best or p < best[k][0]):
+            best[k] = (p, GPU_MODEL[m.group(1)])
+    return [dict(provider="GCP", region=r, kind="gpu", sku=model, unit="EUR/ora", price=round(p, 4), source=SVC,
+                 note="solo GPU: vCPU e RAM della VM a parte") for (r, _), (p, model) in best.items()]

@@ -76,3 +76,25 @@ def reserved():
                 best[k] = (p, n, fam)
     return [vm("Azure", r, s.replace("Standard_", ""), n, n * GB_PER_VCPU[f], p / 730, monthly=p, source=URL, term=t,
                note="Reservation") for (r, s, t), (p, n, f) in best.items()]
+
+
+GPU_SKUS = {"Standard_ND96isr_H100_v5": (8, "NVIDIA H100 80GB"), "Standard_NC40ads_H100_v5": (1, "NVIDIA H100 NVL 94GB"),
+            "Standard_NC24ads_A100_v4": (1, "NVIDIA A100 80GB"), "Standard_NC96ads_A100_v4": (4, "NVIDIA A100 80GB"),
+            "Standard_ND96amsr_A100_v4": (8, "NVIDIA A100 80GB")}
+GPU_REGIONS = ["westeurope", "italynorth", "swedencentral", "francecentral"]
+
+
+def gpu():
+    names = " or ".join(f"armSkuName eq '{n}'" for n in GPU_SKUS)
+    out = {}
+    for region in GPU_REGIONS:
+        for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Consumption' and ({names})"):
+            txt = " ".join([i.get("productName", ""), i.get("skuName", ""), i.get("meterName", "")])
+            if i.get("unitOfMeasure") != "1 Hour" or i["retailPrice"] <= 0 or any(x in txt for x in ("Windows", "Spot", "Low Priority")):
+                continue
+            n, model = GPU_SKUS[i["armSkuName"]]
+            k = (region, i["armSkuName"])
+            if k not in out or i["retailPrice"] / n < out[k]["price"]:
+                out[k] = dict(provider="Azure", region=region, kind="gpu", sku=model, unit="EUR/ora", price=round(i["retailPrice"] / n, 4),
+                              source=URL, note=f"{i['armSkuName'].replace('Standard_', '')}: {n} GPU, include vCPU e RAM")
+    return list(out.values())

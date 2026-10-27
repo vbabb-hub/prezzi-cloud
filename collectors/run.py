@@ -1,6 +1,6 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
-import azure, aws, ovh, hetzner, gcp
+import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "data"
@@ -17,7 +17,8 @@ old_status = load(DATA / "status.json", {})
 status, records = {}, []
 
 SOURCES = (("azure", azure.collect), ("azure+", azure.extra), ("azure-ri", azure.reserved), ("aws", aws.collect), ("aws+", aws.extra), ("aws-s3", aws.s3),
-           ("ovh", ovh.collect), ("ovh+", ovh.extra), ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-cud", gcp.cud), ("gcp-gcs", gcp.gcs), ("hetzner", hetzner.collect))
+           ("ovh", ovh.collect), ("ovh+", ovh.extra), ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-cud", gcp.cud), ("gcp-gcs", gcp.gcs), ("hetzner", hetzner.collect),
+           ("azure-gpu", azure.gpu), ("gcp-gpu", gcp.gpu), ("oracle", oracle.collect), ("vultr", vultr.collect), ("linode", linode.collect))
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
     try:
