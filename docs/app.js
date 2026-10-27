@@ -147,6 +147,9 @@ function render(){
   $("#title").textContent = S.view==="compare" ? "Confronto prezzi" : S.view;
   $("#view").innerHTML = S.view==="compare" ? compareView() : providerView(S.view);
   $("#status").innerHTML = Object.entries(S.status).map(([n,s])=>s.pending?`${esc(n)}: da raccogliere`:s.ok?`${esc(n)}: ${s.count} voci${s.da_compilare?` (${s.da_compilare} da compilare)`:""}${s.note?`, ${esc(s.note)}`:""}`:`<span class="bad">${esc(n)}: errore, dati del ${esc(s.date||"?")}</span>`).join("<br>");
+  
+  // Forza il browser a ricalcolare il layout subito dopo il rendering dei dati
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
 }
 function detail(key){
   const r = S.recs.find(x=>x.key===key); if(!r) return; const p = pts(r);
