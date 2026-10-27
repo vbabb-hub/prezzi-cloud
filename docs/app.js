@@ -1,4 +1,4 @@
-window.__app = "v11";
+window.__app = "v12";
 const $ = s => document.querySelector(s);
 const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"]];
 const TIERS = [2, 4, 8, 16];
@@ -50,6 +50,23 @@ function go(v) {
   render(); 
   window.scrollTo(0, 0);
 }
+
+// Calcola i punti per il grafico SVG dello storico
+const pts = r => {
+  const s = (S.series[r.key] || []).slice();
+  if (s.length && s.at(-1)[0] < S.updated) s.push([S.updated, s.at(-1)[1]]);
+  return s.length ? s : [[S.updated || "oggi", r.price]];
+};
+
+function path(p, w, h) {
+  if (p.length < 2) return `M0,${h / 2}H${w}`;
+  const xs = p.map(q => +new Date(q[0])), ys = p.map(q => q[1]), lo = Math.min(...ys), hi = Math.max(...ys);
+  const X = t => (t - xs[0]) / ((xs.at(-1) - xs[0]) || 1) * w, Y = v => h - 3 - (v - lo) / ((hi - lo) || 1) * (h - 6);
+  let d = `M${X(xs[0])},${Y(ys[0])}`; for (let i = 1; i < p.length; i++) d += `H${X(xs[i])}V${Y(ys[i])}`;
+  return d + `H${w}`;
+}
+
+const specSpans = (r, withProv) => [withProv && r.provider, r.vcpu && `${r.vcpu} vCPU`, r.ram_gb && `${num(+r.ram_gb, 0)} GB`, r.region, TL[r.term], r.note].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join(" · ");
 
 function cells(term) {
   const c = {};
@@ -148,6 +165,29 @@ function statusOf(key) {
   return { notes, bad: e.some(([, s]) => s.ok === false) };
 }
 
+// Mostra il Popup con Grafico SVG e Tabelle dello Storico
+function detail(key) {
+  const r = S.recs.find(x => x.key === key); 
+  if (!r) return; 
+  const p = pts(r);
+
+  $("#dlg").innerHTML = `
+    <h3>${esc(r.provider)} ${esc(r.sku)}</h3>
+    <div class="sub" style="margin-bottom:12px;">${specSpans(r)}</div>
+    <svg class="big" viewBox="0 0 300 150" preserveAspectRatio="none">
+      <path d="${path(p, 300, 150)}" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <table>
+      ${p.slice().reverse().map(q => `<tr><td>${q[0].split("-").reverse().join("/")}</td><td>${num(q[1], q[1] < 1 ? 4 : 2)} ${esc(r.unit)}</td></tr>`).join("")}
+    </table>
+    ${r.source ? `<p style="margin-top:12px;font-size:12px;"><a href="${esc(r.source)}" target="_blank" rel="noopener">Fonte ufficiale</a></p>` : ""}
+    <button type="button" class="close-btn" id="x">Chiudi</button>
+  `;
+
+  $("#dlg").showModal();
+  $("#x").onclick = () => $("#dlg").close();
+}
+
 function compareView() {
   const tabs = `<div class="tabs">${KINDS.map(([k, l]) => `<button type="button" data-k="${k}" aria-pressed="${k === S.kind}">${l}</button>`).join("")}</div>`;
   const chips = S.kind === "compute" ? `<div class="chips">${TERMS.map(([k, l]) => `<button type="button" class="chip" data-t="${k}" aria-pressed="${k === S.term}">${l}</button>`).join("")}<span class="sep"></span>${[2, 4, 8].map(x => `<button type="button" class="chip" data-r="${x}" aria-pressed="${x === S.ratio}">${x} GB per vCPU</button>`).join("")}</div>` : "";
@@ -166,6 +206,10 @@ function render() {
   sidebar();
   $("#title").textContent = S.view === "compare" ? "Confronto prezzi" : S.view;
   $("#view").innerHTML = S.view === "compare" ? compareView() : providerView(S.view);
+  
+  if ($("#status")) {
+    $("#status").innerHTML = Object.entries(S.status).map(([n, s]) => s.pending ? `${esc(n)}: da raccogliere` : s.ok ? `${esc(n)}: ${s.count} voci` : `<span class="bad">${esc(n)}: errore</span>`).join("<br>");
+  }
 }
 
 document.addEventListener("click", e => {
@@ -176,6 +220,7 @@ document.addEventListener("click", e => {
   else if (b.dataset.r) { S.ratio = +b.dataset.r; render(); }
   else if (b.dataset.sort) { S.sort = +b.dataset.sort; render(); }
   else if (b.dataset.pv !== undefined) { S.pv = b.dataset.pv; render(); }
+  else if (b.dataset.key) detail(b.dataset.key); // <-- Apri il popup dello storico
   else if (b.id === "burger") document.body.classList.toggle("nav");
 });
 
