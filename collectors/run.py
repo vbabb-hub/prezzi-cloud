@@ -1,6 +1,6 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
-import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle
+import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb
 from common import Skip
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
