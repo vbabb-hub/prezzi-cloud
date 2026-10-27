@@ -1,5 +1,4 @@
-# IONOS: vCPU server (1 vCPU 0,012 €/h + 1 GB RAM 0,002 €/h) per 730 ore, senza storage; Block Storage per 30 giorni.
-# Fonte: listino ufficiale IONOS Cloud (EUR). Verifica IVA e price group (PG C1) sul listino. Oggetto e traffico: da compilare.
+# IONOS: vCPU server (1 vCPU 0,012 €/h + 1 GB RAM 0,002 €/h) per 730 ore, senza storage; Block Storage per 30 giorni; GPU H200 dal listino EUR.
 entries:
   - {provider: "IONOS", region: "listino EUR", kind: "compute", sku: "vCPU server 2 vCPU / 8 GB", vcpu: 2, ram_gb: 8, unit: "EUR/mese", price: 29.2, price_hour: 0.04, source: "https://docs.ionos.com/cloud/support/general-information/price-list/ionos-cloud-eur-en", verified: "2026-10-26", note: "senza storage"}
   - {provider: "IONOS", region: "listino EUR", kind: "compute", sku: "vCPU server 4 vCPU / 16 GB", vcpu: 4, ram_gb: 16, unit: "EUR/mese", price: 58.4, price_hour: 0.08, source: "https://docs.ionos.com/cloud/support/general-information/price-list/ionos-cloud-eur-en", verified: "2026-10-26", note: "senza storage"}
@@ -18,3 +17,4 @@ entries:
   - {provider: "IONOS", region: "listino EUR", kind: "storage", sku: "Block Storage Performance", unit: "EUR/GB/mese", price: 0.15, source: "https://docs.ionos.com/cloud/support/general-information/price-list/ionos-cloud-eur-en", verified: "2026-10-26", note: "per 30 giorni"}
   - {provider: "IONOS", kind: "storage", region: "IT", sku: "Object storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
   - {provider: "IONOS", kind: "rete", region: "IT", sku: "Traffico in uscita", unit: "EUR/TB", price: null, source: "", verified: null}
+  - {provider: "IONOS", kind: "gpu", region: "UE", sku: "NVIDIA H200 141GB", unit: "EUR/ora", price: 3.0, source: "https://docs.ionos.com/support/general-information/price-list/ionos-cloud-eur-en", verified: "2026-10-27", note: "H200-S: 1 GPU PCIe, 15 vCPU dedicate, 267 GiB RAM, 1 TB NVMe; listino EUR"}

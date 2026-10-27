@@ -1,3 +1,9 @@
-# Hetzner Object Storage: non incluso nell'API prezzi usata dal collector
+# Hetzner, prezzi mensili senza IVA dalla tabella ufficiale del 15/06/2026. Il collector automatico (HCLOUD_TOKEN) è facoltativo.
 entries:
-  - {provider: "Hetzner", kind: storage, region: "EU", sku: "Object Storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CX33", vcpu: 4, ram_gb: 8, unit: "EUR/mese", price: 8.49, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); disponibilità CX limitata, verifica"}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CX43", vcpu: 8, ram_gb: 16, unit: "EUR/mese", price: 15.99, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); disponibilità CX limitata, verifica"}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CX53", vcpu: 16, ram_gb: 32, unit: "EUR/mese", price: 29.49, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); disponibilità CX limitata, verifica"}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CPX32", vcpu: 4, ram_gb: 8, unit: "EUR/mese", price: 35.49, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); core dedicati"}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CCX33", vcpu: 8, ram_gb: 32, unit: "EUR/mese", price: 138.49, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); core dedicati"}
+  - {provider: "Hetzner", kind: "compute", region: "DE/FI", sku: "CCX43", vcpu: 16, ram_gb: 64, unit: "EUR/mese", price: 275.99, source: "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/", verified: "2026-10-27", note: "senza IPv4 (+0,50 €); core dedicati"}
+  - {provider: "Hetzner", kind: "storage", region: "EU", sku: "Object Storage", unit: "EUR/GB/mese", price: null, source: "", verified: null}

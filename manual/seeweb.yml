@@ -1,0 +1,10 @@
+# Seeweb: GPU dal listino pubblico (seeweb.it/en/products/cloud-server-gpu). Cloud Server: tariffe orarie per taglia non estraibili in modo chiaro, da compilare.
+entries:
+  - {provider: "Seeweb", kind: "gpu", region: "Italia", sku: "NVIDIA H100 80GB", unit: "EUR/ora", price: 1.89, source: "https://www.seeweb.it/en/products/cloud-server-gpu", verified: "2026-10-27", note: "on-demand; con impegno 3/6/12 mesi: 1,80 / 1,70 / 1,61 €/h; verifica IVA"}
+  - {provider: "Seeweb", kind: "gpu", region: "Italia", sku: "NVIDIA A100 80GB", unit: "EUR/ora", price: 0.99, source: "https://www.seeweb.it/en/products/cloud-server-gpu", verified: "2026-10-27", note: "on-demand; 3/6/12 mesi: 0,94 / 0,89 / 0,84 €/h; verifica IVA"}
+  - {provider: "Seeweb", kind: "gpu", region: "Italia", sku: "NVIDIA L40S 48GB", unit: "EUR/ora", price: 0.85, source: "https://www.seeweb.it/en/products/cloud-server-gpu", verified: "2026-10-27", note: "on-demand; 3/6/12 mesi: 0,81 / 0,77 / 0,72 €/h; verifica IVA"}
+  - {provider: "Seeweb", kind: "gpu", region: "Italia", sku: "NVIDIA L4 24GB", unit: "EUR/ora", price: 0.38, source: "https://www.seeweb.it/en/products/cloud-server-gpu", verified: "2026-10-27", note: "on-demand; 3/6/12 mesi: 0,36 / 0,34 / 0,32 €/h; verifica IVA"}
+  - {provider: "Seeweb", kind: "compute", region: "Italia", sku: "Cloud Server 2 vCPU / 8 GB", vcpu: 2, ram_gb: 8, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Seeweb", kind: "compute", region: "Italia", sku: "Cloud Server 4 vCPU / 16 GB", vcpu: 4, ram_gb: 16, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Seeweb", kind: "compute", region: "Italia", sku: "Cloud Server 8 vCPU / 32 GB", vcpu: 8, ram_gb: 32, unit: "EUR/mese", price: null, source: "", verified: null}
+  - {provider: "Seeweb", kind: "compute", region: "Italia", sku: "Cloud Server 16 vCPU / 64 GB", vcpu: 16, ram_gb: 64, unit: "EUR/mese", price: null, source: "", verified: null}
