@@ -1,8 +1,9 @@
-window.__app = "v10";
+window.__app = "v11";
 const $ = s => document.querySelector(s);
 const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"]];
 const TIERS = [2, 4, 8, 16];
 const TERMS = [["od","On-demand"],["1y","Impegno 1 anno"],["3y","Impegno 3 anni"]];
+const TL = {"1y":"impegno 1 anno","3y":"impegno 3 anni"};
 const GROUPS = [
   ["Hyperscaler", [["AWS","aws"],["Azure","azure"],["GCP","gcp"],["Oracle Cloud","oracle"]]],
   ["Europei", [["OVHcloud","ovh"],["Hetzner","hetzner"],["Scaleway","scaleway"],["STACKIT","stackit"],["IONOS","ionos"]]],
@@ -10,6 +11,12 @@ const GROUPS = [
   ["Altri", [["Vultr","vultr"],["Akamai Linode","linode"]]],
   ["Virtualizzazione", [["Proxmox VE","proxmox"],["VMware","vmware"],["Nutanix","nutanix"]]]
 ];
+const HELP = {
+  GCP: "Mancano i dati perché non è impostato il secret GCP_API_KEY: serve una chiave API di Google (Cloud Billing API) da salvare nei secret del repository GitHub.",
+  Fastweb: "Nessun listino pubblico: si vende su preventivo. Compila manual/fastweb.yml quando hai un'offerta.",
+  Noovle: "Nessun listino pubblico: si vende su preventivo. Compila manual/noovle.yml quando hai un'offerta.",
+  Nutanix: "Nessun listino pubblico. Compila le voci in manual/onprem.yml."
+};
 
 const S = { view: "compare", kind: "compute", term: "od", ratio: 4, sort: 4, pv: "", recs: [], series: {}, status: {}, updated: "" };
 
@@ -17,9 +24,10 @@ const num = (n, d = 2) => n.toLocaleString("it-IT", { minimumFractionDigits: d, 
 const eur = n => num(n, n >= 100 ? 0 : 2);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const initials = n => n.replace(/[^A-Za-z0-9 ]/g, "").split(/\s+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase();
-const mono = n => `<i class="mono">${esc(initials(n))}</i>`;
+const mono = (n, sz = "") => `<i class="mono ${sz}">${esc(initials(n))}</i>`;
 const termOf = r => r.term || "od";
 const isObj = r => /object|s3|blob|cloud storage/i.test(r.sku);
+const KEYOF = Object.fromEntries(GROUPS.flatMap(([, l]) => l));
 
 async function load() {
   const j = u => fetch(u, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
@@ -40,6 +48,7 @@ function go(v) {
   history.replaceState(null, "", v === "compare" ? location.pathname : "#" + encodeURIComponent(v)); 
   document.body.classList.remove("nav"); 
   render(); 
+  window.scrollTo(0, 0);
 }
 
 function cells(term) {
@@ -57,26 +66,21 @@ function matrix() {
   const rows = Object.keys(cell).sort((a, b) => (cell[a][S.sort]?.price ?? 1e12) - (cell[b][S.sort]?.price ?? 1e12));
   if (!rows.length) return `<p class="empty">Nessuna configurazione con ${S.ratio} GB per vCPU.</p>`;
   
-  // Calcolo dei valori minimi e massimi per colonna per assegnare la gradazione cromatica (Verde -> Rosso)
   const colStats = {};
   TIERS.forEach(t => {
     const vals = rows.map(p => cell[p][t]?.price).filter(v => v != null);
-    if (vals.length) {
-      colStats[t] = { min: Math.min(...vals), max: Math.max(...vals) };
-    }
+    if (vals.length) colStats[t] = { min: Math.min(...vals), max: Math.max(...vals) };
   });
 
   const head = TIERS.map(t => `<th><button type="button" data-sort="${t}" aria-pressed="${t === S.sort}">${t} vCPU</button></th>`).join("");
-  const body = rows.map(p => `<tr><th scope="row">${mono(p)} ${esc(p)}</th>` + TIERS.map(t => {
+  const body = rows.map(p => `<tr><th scope="row"><button type="button" data-v="${esc(p)}">${mono(p)} ${esc(p)}</button></th>` + TIERS.map(t => {
     const r = cell[p][t];
     if (!r) return `<td class="na">–</td>`;
     
-    // Assegnazione classe termica in base alla posizione di prezzo
     let tClass = "";
     const stats = colStats[t];
     if (stats) {
-      const pVal = r.price;
-      const range = stats.max - stats.min;
+      const pVal = r.price, range = stats.max - stats.min;
       if (pVal === stats.min) tClass = " t-best";
       else if (range === 0 || pVal <= stats.min + range * 0.33) tClass = " t-good";
       else if (pVal <= stats.min + range * 0.66) tClass = " t-mid";
@@ -103,13 +107,45 @@ function ranked() {
     return `<h3>${esc(t)}</h3>` + rows.map((r, i) => {
       const d = i ? ((r.price / m - 1) * 100) : null;
       return `<button type="button" class="row" data-key="${esc(r.key)}"><span class="rk">${i + 1}</span>
-        <span><b>${esc(r.provider)}</b> ${esc(r.sku)}<span class="sub"><span>${esc(r.region)}</span><span>${esc(r.term ? r.term : "")}</span></span></span>
+        <span><b>${esc(r.provider)}</b> ${esc(r.sku)}<span class="sub"><span>${esc(r.region)}</span><span>${esc(r.term ? TL[r.term] || r.term : "")}</span></span></span>
         <span class="price"><b>${num(r.price, r.price < 1 ? 4 : 2)}</b><small>${i === 0 ? (rows.length > 1 ? `<span class="best">più basso</span>` : "") : d == null ? "" : "+" + num(d, 0) + "%"}</small></span>
         <span>→</span></button>`;
     }).join("");
   }).join("");
 
   return `<div class="rows">${out || `<p class="empty">Nessuna voce in questa categoria.</p>`}</div>`;
+}
+
+const prow = r => `<button type="button" class="row" data-key="${esc(r.key)}"><span class="rk">·</span><span><b>${esc(r.sku)}</b><span class="sub"><span>${esc(r.vcpu ? r.vcpu + " vCPU" : "")}</span><span>${esc(r.ram_gb ? r.ram_gb + " GB RAM" : "")}</span><span>${esc(r.region)}</span><span>${esc(r.term ? TL[r.term] || r.term : "")}</span></span></span><span class="price"><b>${num(r.price, r.price < 1 ? 4 : 2)}</b><small>${esc(r.unit)}</small></span><span>→</span></button>`;
+
+function providerView(name) {
+  const rs = S.recs.filter(r => r.provider === name), st = statusOf(KEYOF[name] || name.toLowerCase());
+  const nk = KINDS.filter(([k]) => rs.some(r => r.kind === k)).length;
+  const head = `<section class="phead">${mono(name, "lg")}<div><h2>${esc(name)}</h2><p>${rs.length ? `${rs.length} voci in ${nk} ${nk === 1 ? "categoria" : "categorie"}` : "Nessun dato disponibile"}</p></div></section>`;
+  const warn = (HELP[name] && !rs.length ? `<p class="warn">${esc(HELP[name])}</p>` : "") + (st.notes.length ? `<p class="warn">${st.notes.map(esc).join("<br>")}</p>` : "");
+  if (!rs.length) return head + (warn || `<p class="empty">Nessuna voce raccolta per questo provider.</p>`);
+  
+  const vc = rs.some(r => r.kind === "compute" && r.vcpu) ? `<div class="chips">${["", 2, 4, 8, 16].map(x => `<button type="button" class="chip" data-pv="${x}" aria-pressed="${String(x) === String(S.pv)}">${x === "" ? "Tutte le taglie" : x + " vCPU"}</button>`).join("")}</div>` : "";
+  const secs = KINDS.map(([k, l]) => {
+    let list = rs.filter(r => r.kind === k);
+    if (!list.length) return "";
+    let inner;
+    if (k === "compute") {
+      if (S.pv !== "") list = list.filter(r => r.vcpu == S.pv);
+      const terms = TERMS.filter(([t]) => list.some(r => termOf(r) === t));
+      inner = terms.map(([t, tl]) => `${terms.length > 1 ? `<p class="th">${tl}</p>` : ""}` + list.filter(r => termOf(r) === t).sort((a, b) => a.vcpu - b.vcpu || a.ram_gb - b.ram_gb || a.price - b.price).map(prow).join("")).join("") || `<p class="empty">Nessuna voce con questa taglia.</p>`;
+    } else {
+      inner = list.slice().sort((a, b) => a.unit.localeCompare(b.unit) || a.price - b.price).map(prow).join("");
+    }
+    return `<details class="sec" open><summary><h3>${l}</h3><span>${list.length} ${list.length === 1 ? "voce" : "voci"}</span></summary>${inner}</details>`;
+  }).join("");
+  return head + warn + vc + secs;
+}
+
+function statusOf(key) {
+  const e = Object.entries(S.status).filter(([k]) => k === key || k.startsWith(key + "-") || k === key + "+");
+  const notes = [...new Set(e.map(([, s]) => s.pending ? "da raccogliere" : s.note || (s.ok === false ? "errore nella raccolta automatica" : "")).filter(Boolean))];
+  return { notes, bad: e.some(([, s]) => s.ok === false) };
 }
 
 function compareView() {
@@ -129,7 +165,7 @@ function render() {
   $("#meta").textContent = S.updated ? `Dati del ${S.updated}` : "Caricamento...";
   sidebar();
   $("#title").textContent = S.view === "compare" ? "Confronto prezzi" : S.view;
-  $("#view").innerHTML = S.view === "compare" ? compareView() : `<p class="empty">Visualizzazione dettagli provider in arrivo.</p>`;
+  $("#view").innerHTML = S.view === "compare" ? compareView() : providerView(S.view);
 }
 
 document.addEventListener("click", e => {
@@ -139,6 +175,7 @@ document.addEventListener("click", e => {
   else if (b.dataset.t) { S.term = b.dataset.t; render(); }
   else if (b.dataset.r) { S.ratio = +b.dataset.r; render(); }
   else if (b.dataset.sort) { S.sort = +b.dataset.sort; render(); }
+  else if (b.dataset.pv !== undefined) { S.pv = b.dataset.pv; render(); }
   else if (b.id === "burger") document.body.classList.toggle("nav");
 });
 
