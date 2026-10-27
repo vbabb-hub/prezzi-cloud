@@ -83,7 +83,7 @@ function render(){
   $("#kinds").innerHTML = KINDS.map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===S.kind}">${l}</button>`).join("");
   $("#chips").innerHTML = S.kind==="compute" ? TERMS.map(([k,l])=>`<button type="button" class="chip" data-t="${k}" aria-pressed="${k===S.term}">${l}</button>`).join("")+`<span class="sep"></span>`+[2,4,8].map(x=>`<button type="button" class="chip" data-r="${x}" aria-pressed="${x===S.ratio}">${x} GB per vCPU</button>`).join("") : "";
   $("#list").innerHTML = S.kind==="compute" ? matrix() : ranked();
-  $("#status").innerHTML = Object.entries(S.status).map(([n,s])=>s.pending?`${n}: da raccogliere`:s.ok?`${n}: ${s.count} voci${s.da_compilare?` (${s.da_compilare} da compilare)`:""}`:`<span class="bad">${n}: errore, dati del ${s.date||"?"}</span>`).join("<br>");
+  $("#status").innerHTML = Object.entries(S.status).map(([n,s])=>s.pending?`${n}: da raccogliere`:s.ok?`${n}: ${s.count} voci${s.da_compilare?` (${s.da_compilare} da compilare)`:""}${s.note?` · ${s.note}`:""}`:`<span class="bad">${n}: errore, dati del ${s.date||"?"}</span>`).join("<br>");
 }
 function detail(key){
   const r = S.recs.find(x=>x.key===key); if(!r) return; const p = pts(r);
