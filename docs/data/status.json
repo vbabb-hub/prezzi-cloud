@@ -16,17 +16,17 @@
  },
  "aws": {
   "ok": true,
-  "count": 48,
+  "count": 107,
   "date": "2026-10-27"
  },
  "aws+": {
   "ok": true,
-  "count": 2,
+  "count": 3,
   "date": "2026-10-27"
  },
  "aws-s3": {
   "ok": true,
-  "count": 2,
+  "count": 3,
   "date": "2026-10-27"
  },
  "ovh": {
@@ -69,10 +69,37 @@
   "count": 0,
   "date": null
  },
+ "azure-gpu": {
+  "ok": true,
+  "count": 16,
+  "date": "2026-10-27"
+ },
+ "gcp-gpu": {
+  "ok": false,
+  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "count": 0,
+  "date": null
+ },
+ "oracle": {
+  "ok": true,
+  "count": 4,
+  "date": "2026-10-27"
+ },
+ "vultr": {
+  "ok": true,
+  "count": 42,
+  "date": "2026-10-27"
+ },
+ "linode": {
+  "ok": false,
+  "error": "unsupported operand type(s) for *: 'NoneType' and 'float'",
+  "count": 0,
+  "date": null
+ },
  "manual": {
   "ok": true,
-  "count": 40,
+  "count": 46,
   "date": "2026-10-27",
-  "da_compilare": 10
+  "da_compilare": 7
  }
 }
