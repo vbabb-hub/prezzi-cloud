@@ -10,7 +10,8 @@
   "date": "2026-10-27"
  },
  "azure-ri": {
-  "ok": true,
+  "ok": false,
+  "error": "429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/retail/prices?api-version=2023-01-01-preview&currencyCode=EUR&$filter=serviceName%20eq%20%27Virtual%20Machines%27%20and%20",
   "count": 304,
   "date": "2026-10-27"
  },
@@ -36,38 +37,38 @@
  },
  "ovh+": {
   "ok": true,
-  "count": 9,
+  "count": 76,
   "date": "2026-10-27"
  },
  "gcp": {
-  "ok": false,
-  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "GCP_API_KEY non impostato",
+  "date": "2026-10-27"
  },
  "gcp+": {
-  "ok": false,
-  "error": "nessun record restituito",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "nessun record",
+  "date": "2026-10-27"
  },
  "gcp-cud": {
-  "ok": false,
-  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "GCP_API_KEY non impostato",
+  "date": "2026-10-27"
  },
  "gcp-gcs": {
-  "ok": false,
-  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "GCP_API_KEY non impostato",
+  "date": "2026-10-27"
  },
  "hetzner": {
-  "ok": false,
-  "error": "HCLOUD_TOKEN non impostato (secret GitHub)",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali",
+  "date": "2026-10-27"
  },
  "azure-gpu": {
   "ok": true,
@@ -75,10 +76,10 @@
   "date": "2026-10-27"
  },
  "gcp-gpu": {
-  "ok": false,
-  "error": "GCP_API_KEY non impostato (secret GitHub)",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "GCP_API_KEY non impostato",
+  "date": "2026-10-27"
  },
  "oracle": {
   "ok": true,
@@ -98,8 +99,8 @@
  },
  "manual": {
   "ok": true,
-  "count": 46,
+  "count": 76,
   "date": "2026-10-27",
-  "da_compilare": 7
+  "da_compilare": 19
  }
 }
