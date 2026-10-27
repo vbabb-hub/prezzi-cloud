@@ -1,4 +1,4 @@
-window.__app = "v12";
+window.__app = "v13";
 const $ = s => document.querySelector(s);
 const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"]];
 const TIERS = [2, 4, 8, 16];
@@ -51,7 +51,6 @@ function go(v) {
   window.scrollTo(0, 0);
 }
 
-// Calcola i punti per il grafico SVG dello storico
 const pts = r => {
   const s = (S.series[r.key] || []).slice();
   if (s.length && s.at(-1)[0] < S.updated) s.push([S.updated, s.at(-1)[1]]);
@@ -165,7 +164,6 @@ function statusOf(key) {
   return { notes, bad: e.some(([, s]) => s.ok === false) };
 }
 
-// Mostra il Popup con Grafico SVG e Tabelle dello Storico
 function detail(key) {
   const r = S.recs.find(x => x.key === key); 
   if (!r) return; 
@@ -220,8 +218,14 @@ document.addEventListener("click", e => {
   else if (b.dataset.r) { S.ratio = +b.dataset.r; render(); }
   else if (b.dataset.sort) { S.sort = +b.dataset.sort; render(); }
   else if (b.dataset.pv !== undefined) { S.pv = b.dataset.pv; render(); }
-  else if (b.dataset.key) detail(b.dataset.key); // <-- Apri il popup dello storico
+  else if (b.dataset.key) detail(b.dataset.key);
   else if (b.id === "burger") document.body.classList.toggle("nav");
+  else if (b.id === "csv") {
+    const rows = S.recs.filter(r => S.view === "compare" ? r.kind === S.kind : r.provider === S.view);
+    const c = [["provider","categoria","regione","sku","vcpu","ram_gb","impegno","unita","prezzo","fonte"],...rows.map(r=>[r.provider,r.kind,r.region,r.sku,r.vcpu??"",r.ram_gb??"",r.term||"on-demand",r.unit,r.price,r.source])]
+      .map(l=>l.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff"+c],{type:"text/csv"})); a.download = `prezzi-${S.view==="compare"?S.kind:S.view}-${S.updated}.csv`; a.click();
+  }
 });
 
 $("#scrim").onclick = () => document.body.classList.remove("nav");
