@@ -5,7 +5,9 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--sans)}
 button{font:inherit;color:inherit;cursor:pointer}
-.app{display:grid;grid-template-columns:276px minmax(0,1fr);min-height:100vh}
+.app{display:grid;grid-template-columns:276px minmax(0,1fr);min-height:100vh
+align-items: start; /* <-- AGGIUNGI QUESTA RIGA */    
+    }
 #side{background:var(--side);border-right:1px solid var(--line);padding:calc(20px + env(safe-area-inset-top)) 12px 20px;position:sticky;top:0;height:100vh;overflow:auto}
 .brand{padding:0 10px 16px}
 .brand b{display:block;font:600 22px/1.1 var(--serif);letter-spacing:-.01em}
