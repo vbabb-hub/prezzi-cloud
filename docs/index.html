@@ -6,21 +6,27 @@
 <title>Prezzi cloud</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<meta name="theme-color" content="#0f3a4a">
+<meta name="theme-color" content="#2c4fd6">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <h1>Prezzi cloud</h1>
-  <p id="meta">Caricamento…</p>
-</header>
-<nav id="kinds" aria-label="Tipo di risorsa"></nav>
-<section id="filters">
-  <div id="chips"></div>
-</section>
-<main id="list"></main>
-<div class="tools"><button id="csv" type="button">Esporta CSV</button></div>
-<footer id="status"></footer>
+<div class="app">
+  <aside id="side" aria-label="Provider">
+    <div class="brand"><b>Prezzi cloud</b><span id="meta">Caricamento…</span></div>
+    <button type="button" class="pi home" data-v="compare"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h14v3H3zM3 9h14v3H3zM3 14h9v3H3z"/></svg><span>Confronto</span></button>
+    <nav id="provs"></nav>
+    <details class="stat"><summary>Stato delle fonti</summary><div id="status"></div></details>
+  </aside>
+  <div id="scrim"></div>
+  <main>
+    <header class="top">
+      <button type="button" id="burger" aria-label="Apri l'elenco dei provider"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+      <h1 id="title">Confronto</h1>
+      <button type="button" id="csv">Esporta CSV</button>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
 <dialog id="dlg"></dialog>
 <script src="app.js"></script>
 </body>
