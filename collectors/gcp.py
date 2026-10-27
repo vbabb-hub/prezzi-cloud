@@ -1,5 +1,5 @@
 import os, re
-from common import get, vm, TIERS
+from common import get, vm, TIERS, Skip
 
 SVC = "https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus"   # Compute Engine
 REGIONS = {"europe-west8": "Milan", "europe-west3": "Frankfurt"}
@@ -28,7 +28,7 @@ def _skus(key, svc=SVC):
 def collect():
     key = os.environ.get("GCP_API_KEY")
     if not key:
-        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+        raise Skip("GCP_API_KEY non impostato")
     core, ram, disk, egr = {}, {}, {}, {}
     for s in _skus(key):
         c, desc = s.get("category", {}), s["description"]
@@ -66,7 +66,7 @@ GCS = "https://cloudbilling.googleapis.com/v1/services/95FF-2EF5-5EA1/skus"   # 
 def gcs():
     key = os.environ.get("GCP_API_KEY")
     if not key:
-        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+        raise Skip("GCP_API_KEY non impostato")
     best = {}
     for s in _skus(key, GCS):
         c, d = s.get("category", {}), s["description"]
@@ -84,7 +84,7 @@ CUD = re.compile(r"^Commitment v1: N2 (Cpu|Ram) in (.+) for (1|3) Years?$")
 def cud():
     key = os.environ.get("GCP_API_KEY")
     if not key:
-        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+        raise Skip("GCP_API_KEY non impostato")
     core, ram = {}, {}
     for s in _skus(key):
         m = CUD.match(s["description"])
@@ -103,7 +103,7 @@ GPU_REGIONS = {"europe-west4", "europe-west3", "europe-west1", "europe-west8"}
 def gpu():
     key = os.environ.get("GCP_API_KEY")
     if not key:
-        raise RuntimeError("GCP_API_KEY non impostato (secret GitHub)")
+        raise Skip("GCP_API_KEY non impostato")
     best = {}
     for s in _skus(key):
         m = GPU_RX.match(s["description"])

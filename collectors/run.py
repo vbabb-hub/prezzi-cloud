@@ -1,6 +1,7 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
 import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle
+from common import Skip
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "data"
@@ -26,11 +27,14 @@ for name, fn in SOURCES:
         if len(old) > 10 and len(new) < len(old) * 0.5:
             raise RuntimeError(f"solo {len(new)} record contro {len(old)}: formato API cambiato?")
         if not new:
-            raise RuntimeError("nessun record restituito")
+            raise Skip("nessun record")
         for r in new:
             r["src"] = name
         records += new
         status[name] = dict(ok=True, count=len(new), date=today)
+    except Skip as e:
+        records += old
+        status[name] = dict(ok=True, count=len(old), note=str(e), date=today)
     except Exception as e:
         traceback.print_exc()
         for r in old:   # mantiene l'ultimo dato noto, segnalato come non aggiornato

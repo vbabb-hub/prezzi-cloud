@@ -1,5 +1,9 @@
 import requests
 
+class Skip(Exception):
+    """Fonte saltata di proposito (per esempio secret mancante): non è un errore."""
+
+
 HOURS = 730
 TIERS = {2, 4, 8, 16}  # vCPU considerate nel confronto
 

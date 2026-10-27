@@ -1,5 +1,5 @@
 import os
-from common import get, vm, TIERS
+from common import get, vm, TIERS, Skip
 
 API = "https://api.hetzner.cloud/v1"
 LOC = "fsn1"
@@ -8,7 +8,7 @@ LOC = "fsn1"
 def collect():
     tok = os.environ.get("HCLOUD_TOKEN")
     if not tok:
-        raise RuntimeError("HCLOUD_TOKEN non impostato (secret GitHub)")
+        raise Skip("HCLOUD_TOKEN non impostato: uso i prezzi manuali")
     h = {"Authorization": f"Bearer {tok}"}
     out = []
     for st in get(f"{API}/server_types", headers=h, params={"per_page": 50}).json()["server_types"]:
