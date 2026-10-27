@@ -62,7 +62,7 @@ function ranked(){
   const g = {};
   S.recs.filter(r=>r.kind===S.kind).forEach(r=>{
     const sub = S.kind==="storage" ? (isObj(r)?"Object storage":"Block storage")+" · " : "";
-    const grp = (g[S.kind==="gpu" ? r.sku : sub+r.unit] ??= {}), k = r.provider+"|"+r.sku;
+    const grp = (g[S.kind==="gpu" ? r.sku+" · "+r.unit+" per GPU" : sub+r.unit] ??= {}), k = r.provider+"|"+r.sku;
     if(!grp[k] || r.price < grp[k].price) grp[k] = r;
   });
   const out = Object.entries(g).map(([t,grp])=>{
