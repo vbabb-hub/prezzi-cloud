@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
 <meta name="theme-color" content="#2c4fd6">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <div class="app">
@@ -15,6 +15,7 @@
     <div class="brand"><b>Prezzi cloud</b><span id="meta">Caricamento…</span></div>
     <button type="button" class="pi home" data-v="compare"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h14v3H3zM3 9h14v3H3zM3 14h9v3H3z"/></svg><span>Confronto</span></button>
     <nav id="provs"></nav>
+    <p id="ver" class="ver"></p>
     <details class="stat"><summary>Stato delle fonti</summary><div id="status"></div></details>
   </aside>
   <div id="scrim"></div>
@@ -28,6 +29,10 @@
   </main>
 </div>
 <dialog id="dlg"></dialog>
-<script src="app.js"></script>
+<script>
+window.addEventListener("error",function(e){var v=document.getElementById("view");if(v)v.innerHTML='<p class="warn">Errore nella pagina: '+e.message+' ('+String(e.filename||"").split("/").pop()+'). Probabile file non aggiornato: ricarica con Ctrl+Maiusc+R e controlla che docs/app.js sia quello nuovo.</p>';});
+setTimeout(function(){if(!window.__app){var v=document.getElementById("view");if(v&&!v.innerHTML)v.innerHTML='<p class="warn">app.js non caricato: controlla che il file docs/app.js sia nel repository, poi ricarica con Ctrl+Maiusc+R.</p>';}},3000);
+</script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+window.__app = "v8";
 const $ = s => document.querySelector(s);
 const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"]];
 const TIERS = [2, 4, 8, 16];
@@ -142,6 +143,7 @@ function sidebar(){
 function render(){
   $("#meta").textContent = S.updated ? `Dati del ${S.updated.split("-").reverse().join("/")}, IVA esclusa` : "Nessun dato: lancia il workflow su GitHub";
   sidebar();
+  $("#ver").textContent = "Interfaccia " + window.__app;
   $("#title").textContent = S.view==="compare" ? "Confronto prezzi" : S.view;
   $("#view").innerHTML = S.view==="compare" ? compareView() : providerView(S.view);
   $("#status").innerHTML = Object.entries(S.status).map(([n,s])=>s.pending?`${esc(n)}: da raccogliere`:s.ok?`${esc(n)}: ${s.count} voci${s.da_compilare?` (${s.da_compilare} da compilare)`:""}${s.note?`, ${esc(s.note)}`:""}`:`<span class="bad">${esc(n)}: errore, dati del ${esc(s.date||"?")}</span>`).join("<br>");

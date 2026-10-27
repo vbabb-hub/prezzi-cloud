@@ -105,3 +105,4 @@ dialog button{margin-top:14px;border:1px solid var(--line);background:none;borde
  .phead h2{font-size:26px}
 }
 @media (prefers-reduced-motion:reduce){#side,details.sec>summary::before{transition:none}}
+.ver{margin:14px 10px 0;font-size:11.5px;color:var(--mute)}
