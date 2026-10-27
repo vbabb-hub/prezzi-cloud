@@ -1,5 +1,9 @@
-# Compila "price" (IVA esclusa), "source" (URL listino) e "verified" (data). Le voci con price: null vengono ignorate.
+# GPU: EUR per GPU all'ora, IVA esclusa, on-demand. Scaleway e OVHcloud da fonti terze (ott 2026): verificare sui listini ufficiali.
+# AWS, Azure e GCP arrivano dai collector (prezzo per GPU = prezzo istanza / n. GPU).
 entries:
-  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA L40S 48GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}
-  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA A100 80GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}
-  - {provider: "GPUaaS (provider da indicare)", kind: gpu, region: "IT", sku: "NVIDIA H100 80GB (1 GPU)", unit: "EUR/ora", price: null, source: "", verified: null}
+  - {provider: "Scaleway", kind: "gpu", region: "Parigi", sku: "NVIDIA H100 80GB", unit: "EUR/ora", price: 2.73, source: "https://www.qovery.com/blog/gpu-pricing-comparison-method-aws-gcp-azure-scaleway-2026", verified: "2026-10-26", note: "H100 PCIe, 1 GPU, IVA esclusa; fonte secondaria ott 2026: verifica su scaleway.com"}
+  - {provider: "Scaleway", kind: "gpu", region: "Parigi", sku: "NVIDIA L40S 48GB", unit: "EUR/ora", price: 1.47, source: "https://www.qovery.com/blog/gpu-pricing-comparison-method-aws-gcp-azure-scaleway-2026", verified: "2026-10-26", note: "1 GPU, IVA esclusa; fonte secondaria ott 2026: verifica su scaleway.com"}
+  - {provider: "Scaleway", kind: "gpu", region: "Parigi", sku: "NVIDIA L4 24GB", unit: "EUR/ora", price: 0.79, source: "https://www.qovery.com/blog/gpu-pricing-comparison-method-aws-gcp-azure-scaleway-2026", verified: "2026-10-26", note: "1 GPU, IVA esclusa; fonte secondaria ott 2026: verifica su scaleway.com"}
+  - {provider: "OVHcloud", kind: "gpu", region: "Gravelines", sku: "NVIDIA H100 80GB", unit: "EUR/ora", price: 2.8, source: "https://www.spheron.network/blog/ovhcloud-gpu-pricing-2026-h100-cost-and-sovereign-ai/", verified: "2026-10-26", note: "h100-380 (PCIe), 1 GPU, traffico incluso; verifica sul listino OVH"}
+  - {provider: "OVHcloud", kind: "gpu", region: "Gravelines", sku: "NVIDIA A100 80GB", unit: "EUR/ora", price: 2.75, source: "https://cloudgpuprices.com/vendors/ovhcloud", verified: "2026-10-26", note: "a100-180, 1 GPU; fonte terza: verifica sul listino OVH"}
+  - {provider: "OVHcloud", kind: "gpu", region: "Gravelines", sku: "NVIDIA L40S 48GB", unit: "EUR/ora", price: 1.6, source: "https://cloudgpuprices.com/vendors/ovhcloud", verified: "2026-10-26", note: "l40s-1-gpu, 1 GPU; fonte terza: verifica sul listino OVH"}
