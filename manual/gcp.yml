@@ -1,0 +1,48 @@
+entries:
+  - provider: GCP
+    region: europe-west3
+    kind: compute
+    sku: n2-standard-2
+    vcpu: 2
+    ram_gb: 8
+    unit: EUR/mese
+    price: 75.40
+    price_hour: 0.1033
+    source: "https://cloud.google.com/compute/pricing"
+  - provider: GCP
+    region: europe-west3
+    kind: compute
+    sku: n2-standard-4
+    vcpu: 4
+    ram_gb: 16
+    unit: EUR/mese
+    price: 150.80
+    price_hour: 0.2066
+    source: "https://cloud.google.com/compute/pricing"
+  - provider: GCP
+    region: europe-west3
+    kind: compute
+    sku: n2-standard-8
+    vcpu: 8
+    ram_gb: 32
+    unit: EUR/mese
+    price: 301.60
+    price_hour: 0.4132
+    source: "https://cloud.google.com/compute/pricing"
+  - provider: GCP
+    region: europe-west3
+    kind: compute
+    sku: n2-standard-16
+    vcpu: 16
+    ram_gb: 64
+    unit: EUR/mese
+    price: 603.20
+    price_hour: 0.8264
+    source: "https://cloud.google.com/compute/pricing"
+  - provider: GCP
+    region: europe-west3
+    kind: storage
+    sku: Persistent Disk Balanced
+    unit: EUR/GB/mese
+    price: 0.10
+    source: "https://cloud.google.com/compute/pricing"
