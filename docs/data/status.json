@@ -36,7 +36,7 @@
  },
  "ovh+": {
   "ok": true,
-  "count": 76,
+  "count": 77,
   "date": "2026-10-28"
  },
  "gcp": {
@@ -87,7 +87,7 @@
  },
  "vultr": {
   "ok": true,
-  "count": 42,
+  "count": 43,
   "date": "2026-10-28"
  },
  "linode": {
