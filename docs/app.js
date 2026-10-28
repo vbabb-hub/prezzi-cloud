@@ -1,6 +1,6 @@
 window.__app = "v13";
 const $ = s => document.querySelector(s);
-const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"]];
+const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"],["colocation", "Colocation"]];
 const TIERS = [2, 4, 8, 16];
 const TERMS = [["od","On-demand"],["1y","Impegno 1 anno"],["3y","Impegno 3 anni"]];
 const TL = {"1y":"impegno 1 anno","3y":"impegno 3 anni"};
