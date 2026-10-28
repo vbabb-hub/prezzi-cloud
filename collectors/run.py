@@ -1,6 +1,6 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
-import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit
+import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox
 from common import Skip
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -24,7 +24,7 @@ SOURCES = (
     ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-cud", gcp.cud), ("gcp-gcs", gcp.gcs), 
     ("hetzner", hetzner.collect), ("azure-gpu", azure.gpu), ("gcp-gpu", gcp.gpu), 
     ("oracle", oracle.collect), ("vultr", vultr.collect), ("linode", linode.collect),
-    ("aruba", aruba.collect), ("seeweb", seeweb.collect), ("stackit", stackit.collect) # <-- AGGIUNTI QUI
+    ("aruba", aruba.collect), ("seeweb", seeweb.collect), ("stackit", stackit.collect), ("proxmox", proxmox.collect) # <-- AGGIUNTI QUI
 )
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
