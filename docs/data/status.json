@@ -82,7 +82,7 @@
  },
  "oracle": {
   "ok": true,
-  "count": 4,
+  "count": 6,
   "date": "2026-10-28"
  },
  "vultr": {
@@ -92,7 +92,7 @@
  },
  "linode": {
   "ok": false,
-  "error": "503 Server Error: Service Unavailable for url: https://api.linode.com/v4/linode/types?page_size=500",
+  "error": "unsupported operand type(s) for *: 'NoneType' and 'float'",
   "count": 0,
   "date": null
  },
@@ -102,6 +102,11 @@
   "date": "2026-10-28"
  },
  "seeweb": {
+  "ok": true,
+  "count": 10,
+  "date": "2026-10-28"
+ },
+ "stackit": {
   "ok": true,
   "count": 10,
   "date": "2026-10-28"
