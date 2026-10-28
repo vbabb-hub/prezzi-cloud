@@ -41,7 +41,7 @@
  },
  "gcp": {
   "ok": true,
-  "count": 4,
+  "count": 32,
   "date": "2026-10-28"
  },
  "gcp+": {
@@ -52,14 +52,12 @@
  },
  "gcp-cud": {
   "ok": true,
-  "count": 0,
-  "note": "nessun record",
+  "count": 16,
   "date": "2026-10-28"
  },
  "gcp-gcs": {
   "ok": true,
-  "count": 0,
-  "note": "nessun record",
+  "count": 2,
   "date": "2026-10-28"
  },
  "hetzner": {
@@ -75,8 +73,7 @@
  },
  "gcp-gpu": {
   "ok": true,
-  "count": 0,
-  "note": "nessun record",
+  "count": 3,
   "date": "2026-10-28"
  },
  "oracle": {
@@ -97,7 +94,7 @@
  },
  "aruba": {
   "ok": true,
-  "count": 13,
+  "count": 21,
   "date": "2026-10-28"
  },
  "seeweb": {
