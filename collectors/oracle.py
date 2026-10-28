@@ -2,17 +2,11 @@ from common import vm
 
 def collect():
     records = []
-    # OCI Standard E5 Flex Tiers mappati sui tier di vCPU della PWA (2, 4, 8, 16 vCPU)
-    # 1 OCPU = 2 vCPU (con hyperthreading standard su AMD EPYC)
-    # Prezzi di listino standard OCI in EUR (circa 0.0138 € / OCPU-ora e 0.0018 € / GB RAM-ora)
     tiers = [
-        # Rapporto 4 GB di RAM per vCPU (copre il filtro principale della matrice)
         (1, 2, 8, "VM.Standard.E5.Flex (2 vCPU / 8GB)"),
         (2, 4, 16, "VM.Standard.E5.Flex (4 vCPU / 16GB)"),
         (4, 8, 32, "VM.Standard.E5.Flex (8 vCPU / 32GB)"),
         (8, 16, 64, "VM.Standard.E5.Flex (16 vCPU / 64GB)"),
-        
-        # Rapporto 2 GB di RAM per vCPU (copre ratio alternativi)
         (1, 2, 4, "VM.Standard.E5.Flex (2 vCPU / 4GB)"),
         (2, 4, 8, "VM.Standard.E5.Flex (4 vCPU / 8GB)"),
         (4, 8, 16, "VM.Standard.E5.Flex (8 vCPU / 16GB)"),
@@ -33,7 +27,7 @@ def collect():
             source="https://www.oracle.com/cloud/price-list/"
         ))
 
-    # Aggiunta Block Storage e Object Storage OCI
+    # Block Storage & Object Storage
     records.append({
         "provider": "Oracle Cloud",
         "region": "EU-Frankfurt",
@@ -54,9 +48,16 @@ def collect():
         "source": "https://www.oracle.com/cloud/price-list/"
     })
 
-    return records
+    # Rete / Egress Internet (OCI offre i primi 10 TB gratis al mese, poi tariffa standard)
+    records.append({
+        "provider": "Oracle Cloud",
+        "region": "EU-Frankfurt",
+        "kind": "rete",
+        "sku": "Egress Internet (oltre i primi 10TB gratuiti)",
+        "unit": "EUR/TB",
+        "price": 8.50,
+        "source": "https://www.oracle.com/cloud/price-list/"
+    })
 
-if __name__ == "__main__":
-    import json
-    print(json.dumps(collect(), indent=2, ensure_ascii=False))
+    return records
     
