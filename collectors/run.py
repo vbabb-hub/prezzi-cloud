@@ -24,7 +24,7 @@ SOURCES = (
     ("gcp", gcp.collect), ("gcp+", gcp.extra), ("gcp-cud", gcp.cud), ("gcp-gcs", gcp.gcs), 
     ("hetzner", hetzner.collect), ("azure-gpu", azure.gpu), ("gcp-gpu", gcp.gpu), 
     ("oracle", oracle.collect), ("vultr", vultr.collect), ("linode", linode.collect),
-    ("aruba", aruba.collect), ("seeweb", seeweb.collect) ("stackit", stackit.collect) # <-- AGGIUNTI QUI
+    ("aruba", aruba.collect), ("seeweb", seeweb.collect), ("stackit", stackit.collect) # <-- AGGIUNTI QUI
 )
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
