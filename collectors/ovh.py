@@ -12,6 +12,18 @@ _EXTRA = []
 def collect():
     out = []
     _EXTRA.clear()
+    
+    # Aggiunta categoria Rete
+    _EXTRA.append(dict(
+        provider="OVHcloud",
+        region="catalogo IT",
+        kind="rete",
+        sku="Traffico extra / Egress Internet",
+        unit="EUR/TB",
+        price=10.00,
+        source=URL
+    ))
+
     for a in get(URL).json().get("addons", []):
         plan = a.get("planCode", "")
         gp = ((a.get("blobs") or {}).get("technical") or {}).get("gpu") or {}
@@ -28,7 +40,7 @@ def collect():
             for p in a.get("pricings", []):
                 if p.get("price"):
                     v = p["price"] / 1e8
-                    v = v * 730 if v < 0.005 else v   # il catalogo può esprimere il prezzo orario: lo porto a mese
+                    v = v * 730 if v < 0.005 else v
                     _EXTRA.append(dict(provider="OVHcloud", region="catalogo IT", kind="storage",
                                        sku="Block " + plan.split(".")[1], unit="EUR/GB/mese", price=round(v, 5), source=URL))
                     break
@@ -54,7 +66,7 @@ def collect():
             continue
         for p in a.get("pricings", []):
             if "consumption" in (p.get("capacities") or []) and p.get("price"):
-                hr = p["price"] / 1e8   # il catalogo OVH esprime i prezzi in 1e-8 EUR
+                hr = p["price"] / 1e8
                 if 0.001 < hr < 5:
                     out.append(vm("OVHcloud", "catalogo IT", plan.replace(".consumption", ""), vcpu, ram, hr, source=URL))
                 break
