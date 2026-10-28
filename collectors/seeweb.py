@@ -32,7 +32,7 @@ def collect():
             h_price = prices[idx] if idx < len(prices) else 0.019 * vcpu
             records.append(vm(
                 provider="Seeweb",
-                region="IT-Milano",
+                region="IT-Milano/Frosinone",
                 sku=sku,
                 vcpu=vcpu,
                 ram=ram,
@@ -58,7 +58,7 @@ def collect():
             records.append({
                 "provider": "Seeweb",
                 "kind": "gpu",
-                "region": "IT-Milano",
+                "region": "IT-Milano/Frosinone",
                 "sku": gpu_sku,
                 "price": h_price,
                 "unit": "EUR/ora",
@@ -68,12 +68,35 @@ def collect():
     except Exception as e:
         print(f"[seeweb] Errore GPU: {e}")
 
-    # 3. Rete / Egress Internet Seeweb
+    # 3. Colocation / Housing Seeweb
     records.append({
         "provider": "Seeweb",
-        "region": "IT-Milano",
+        "region": "IT-Milano/Frosinone",
+        "kind": "colocation",
+        "sku": "Colocation Spazio 1U (Rack Unit)",
+        "unit": "EUR/mese",
+        "price": 50.00,
+        "source": "https://www.seeweb.it/",
+        "note": "Spazio 1U in datacenter tier IV/III con alimentazione inclusa"
+    })
+
+    records.append({
+        "provider": "Seeweb",
+        "region": "IT-Milano/Frosinone",
+        "kind": "colocation",
+        "sku": "Armadio Rack 42U Dedicato",
+        "unit": "EUR/mese",
+        "price": 900.00,
+        "source": "https://www.seeweb.it/",
+        "note": "Rack 42U con kW dedicati"
+    })
+
+    # 4. Rete
+    records.append({
+        "provider": "Seeweb",
+        "region": "IT-Milano/Frosinone",
         "kind": "rete",
-        "sku": "Egress Internet / Traffico Extra",
+        "sku": "Traffico extra / Egress Internet",
         "unit": "EUR/TB",
         "price": 40.00,
         "source": "https://www.seeweb.it/"
@@ -83,4 +106,3 @@ def collect():
         raise Skip("Nessun record recuperato per Seeweb")
 
     return records
-    
