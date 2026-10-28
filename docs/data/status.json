@@ -62,8 +62,7 @@
  },
  "hetzner": {
   "ok": true,
-  "count": 0,
-  "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali",
+  "count": 7,
   "date": "2026-10-28"
  },
  "azure-gpu": {
