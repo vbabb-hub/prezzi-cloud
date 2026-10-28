@@ -82,7 +82,7 @@
  },
  "oracle": {
   "ok": true,
-  "count": 10,
+  "count": 11,
   "date": "2026-10-28"
  },
  "vultr": {
@@ -103,12 +103,12 @@
  },
  "seeweb": {
   "ok": true,
-  "count": 10,
+  "count": 11,
   "date": "2026-10-28"
  },
  "stackit": {
   "ok": true,
-  "count": 10,
+  "count": 11,
   "date": "2026-10-28"
  },
  "manual": {
