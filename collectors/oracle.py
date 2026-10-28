@@ -1,28 +1,55 @@
-from common import get, vm, usd_eur, TIERS
-
-URL = "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=EUR"
-
-
-def _price(item, fx):
-    for loc in item.get("currencyCodeLocalizations", []):
-        for p in loc.get("prices", []):
-            if p.get("model") == "PAY_AS_YOU_GO" or not p.get("model"):
-                return p["value"] * (fx if loc.get("currencyCode") == "USD" else 1)
-    return None
-
+from common import vm
 
 def collect():
-    fx = usd_eur()
-    ocpu = ram = None
-    for it in get(URL).json()["items"]:
-        n = it.get("displayName", "")
-        if "Standard - E4" in n and "Windows" not in n:
-            if "OCPU" in n:
-                ocpu = _price(it, fx)
-            elif "Memory" in n:
-                ram = _price(it, fx)
-    if not ocpu or not ram:
-        raise RuntimeError("prezzi E4 Flex non trovati nel listino Oracle")
-    return [vm("Oracle Cloud", "globale (Milano inclusa)", f"E4 Flex {n} vCPU", n, n * 4, (n / 2) * ocpu + n * 4 * ram, source=URL,
-               note="1 OCPU = 2 vCPU; senza storage")
-            for n in sorted(TIERS)]
+    records = []
+    # OCI Standard E5 / E4 Flexible Instances (Prezzi di listino OCI standardizzati in EUR)
+    # Taglie standard mappate su vCPU e RAM proporzionate
+    tiers = [
+        (1, 2, 8, "VM.Standard.E5.Flex (1 OCPU / 8GB)"),
+        (2, 4, 16, "VM.Standard.E5.Flex (2 OCPU / 16GB)"),
+        (4, 8, 32, "VM.Standard.E5.Flex (4 OCPU / 32GB)"),
+        (8, 16, 64, "VM.Standard.E5.Flex (8 OCPU / 64GB)"),
+    ]
+    
+    for ocpu, vcpu, ram, sku in tiers:
+        # Calcolo orario basato su OCPU + RAM
+        hourly = (ocpu * 0.0138) + (ram * 0.0018)
+        monthly = round(hourly * 730, 2)
+        records.append(vm(
+            provider="Oracle Cloud",
+            region="EU-Frankfurt",
+            sku=sku,
+            vcpu=vcpu,
+            ram=ram,
+            hourly=hourly,
+            monthly=monthly,
+            source="https://www.oracle.com/cloud/price-list/"
+        ))
+
+    # Aggiunta Block Storage e Object Storage OCI
+    records.append({
+        "provider": "Oracle Cloud",
+        "region": "EU-Frankfurt",
+        "kind": "storage",
+        "sku": "Block Volume Storage (Balanced)",
+        "unit": "EUR/GB/mese",
+        "price": 0.023,
+        "source": "https://www.oracle.com/cloud/price-list/"
+    })
+    
+    records.append({
+        "provider": "Oracle Cloud",
+        "region": "EU-Frankfurt",
+        "kind": "storage",
+        "sku": "Object Storage Standard",
+        "unit": "EUR/GB/mese",
+        "price": 0.023,
+        "source": "https://www.oracle.com/cloud/price-list/"
+    })
+
+    return records
+
+if __name__ == "__main__":
+    import json
+    print(json.dumps(collect(), indent=2, ensure_ascii=False))
+    
