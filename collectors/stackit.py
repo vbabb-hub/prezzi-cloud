@@ -27,7 +27,6 @@ def collect():
             source="https://stackit.com/en/products/compute-engine/stackit-compute-engine"
         ))
         
-    # Object Storage
     records.append({
         "provider": "STACKIT",
         "region": "DE-Frankfurt",
@@ -38,7 +37,6 @@ def collect():
         "source": "https://stackit.com/en/products/object-storage"
     })
 
-    # Rete / Egress Internet
     records.append({
         "provider": "STACKIT",
         "region": "DE-Frankfurt",
@@ -50,4 +48,3 @@ def collect():
     })
 
     return records
-    
