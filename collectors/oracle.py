@@ -27,7 +27,6 @@ def collect():
             source="https://www.oracle.com/cloud/price-list/"
         ))
 
-    # Block Storage & Object Storage
     records.append({
         "provider": "Oracle Cloud",
         "region": "EU-Frankfurt",
@@ -48,7 +47,6 @@ def collect():
         "source": "https://www.oracle.com/cloud/price-list/"
     })
 
-    # Rete / Egress Internet (OCI offre i primi 10 TB gratis al mese, poi tariffa standard)
     records.append({
         "provider": "Oracle Cloud",
         "region": "EU-Frankfurt",
@@ -60,4 +58,3 @@ def collect():
     })
 
     return records
-    
