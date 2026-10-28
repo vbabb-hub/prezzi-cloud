@@ -40,10 +40,9 @@
   "date": "2026-10-28"
  },
  "gcp": {
-  "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
-  "count": 0,
-  "date": null
+  "ok": true,
+  "count": 4,
+  "date": "2026-10-28"
  },
  "gcp+": {
   "ok": true,
@@ -52,16 +51,16 @@
   "date": "2026-10-28"
  },
  "gcp-cud": {
-  "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "nessun record",
+  "date": "2026-10-28"
  },
  "gcp-gcs": {
-  "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/95FF-2EF5-5EA1/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "nessun record",
+  "date": "2026-10-28"
  },
  "hetzner": {
   "ok": true,
@@ -75,10 +74,10 @@
   "date": "2026-10-28"
  },
  "gcp-gpu": {
-  "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
+  "ok": true,
   "count": 0,
-  "date": null
+  "note": "nessun record",
+  "date": "2026-10-28"
  },
  "oracle": {
   "ok": true,
@@ -113,8 +112,8 @@
  },
  "manual": {
   "ok": true,
-  "count": 80,
+  "count": 63,
   "date": "2026-10-28",
-  "da_compilare": 15
+  "da_compilare": 14
  }
 }
