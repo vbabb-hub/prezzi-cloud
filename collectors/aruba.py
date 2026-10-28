@@ -102,3 +102,27 @@ def collect():
     records.append({
         "provider": "Aruba Cloud",
         "region": "IT-Arezzo/Bergamo",
+        "kind": "colocation",
+        "sku": "Armadio Rack Completo 42U Dedicato",
+        "unit": "EUR/mese",
+        "price": 850.00,
+        "source": "https://www.arubaperimprese.it/",
+        "note": "Rack 42U con feed A+B ridondato"
+    })
+
+    # 6. Rete / Egress Internet
+    records.append({
+        "provider": "Aruba Cloud",
+        "region": "IT-Arezzo/Bergamo",
+        "kind": "rete",
+        "sku": "Traffico Internet Outbound (oltre 5TB incl.)",
+        "unit": "EUR/TB",
+        "price": 15.00,
+        "source": URL_ARUBA
+    })
+
+    return records
+
+if __name__ == "__main__":
+    import json
+    print(json.dumps(collect(), indent=2, ensure_ascii=False))
