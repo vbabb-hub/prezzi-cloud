@@ -2,7 +2,6 @@ from common import vm
 
 def collect():
     records = []
-    # STACKIT (Germania / EU01) - Listini pubblici ufficiali Compute Engine & General Purpose
     instances = [
         ("General Purpose g3i.1", 1, 4, 0.0585, "EUR/ora"),
         ("General Purpose g3i.2", 2, 8, 0.1031, "EUR/ora"),
@@ -28,7 +27,7 @@ def collect():
             source="https://stackit.com/en/products/compute-engine/stackit-compute-engine"
         ))
         
-    # Aggiunta Object Storage STACKIT
+    # Object Storage
     records.append({
         "provider": "STACKIT",
         "region": "DE-Frankfurt",
@@ -39,9 +38,16 @@ def collect():
         "source": "https://stackit.com/en/products/object-storage"
     })
 
-    return records
+    # Rete / Egress Internet
+    records.append({
+        "provider": "STACKIT",
+        "region": "DE-Frankfurt",
+        "kind": "rete",
+        "sku": "Egress Internet (Data Transfer Out)",
+        "unit": "EUR/TB",
+        "price": 50.00,
+        "source": "https://stackit.com/en/products"
+    })
 
-if __name__ == "__main__":
-    import json
-    print(json.dumps(collect(), indent=2, ensure_ascii=False))
-  
+    return records
+    
