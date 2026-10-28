@@ -11,4 +11,14 @@ def collect():
         out.append(vm("Akamai Linode", "globale", t["id"].replace("g6-", ""), t["vcpus"], t["memory"] / 1024,
                       t["price"]["hourly"] * fx, monthly=t["price"]["monthly"] * fx, source=URL,
                       note="include disco e traffico" + (", core dedicati" if t["class"] == "dedicated" else "")))
+    
+    out.append({
+        "provider": "Akamai Linode",
+        "region": "globale",
+        "kind": "rete",
+        "sku": "Traffico extra (oltre bundle)",
+        "unit": "EUR/TB",
+        "price": round(10.0 * fx, 3),
+        "source": URL
+    })
     return out
