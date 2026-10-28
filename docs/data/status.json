@@ -107,6 +107,11 @@
   "count": 11,
   "date": "2026-10-28"
  },
+ "proxmox": {
+  "ok": true,
+  "count": 8,
+  "date": "2026-10-28"
+ },
  "manual": {
   "ok": true,
   "count": 63,
