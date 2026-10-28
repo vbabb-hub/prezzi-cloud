@@ -12,4 +12,14 @@ def collect():
             continue
         out.append(vm("Vultr", "globale", p["id"], p["vcpu_count"], p["ram"] / 1024, p["monthly_cost"] * fx / 730,
                       monthly=p["monthly_cost"] * fx, source=URL, note=f"{NAMES[kind]}, include disco e traffico"))
+    
+    out.append({
+        "provider": "Vultr",
+        "region": "globale",
+        "kind": "rete",
+        "sku": "Traffico extra (oltre bundle)",
+        "unit": "EUR/TB",
+        "price": round(10.0 * fx, 3),
+        "source": URL
+    })
     return out
