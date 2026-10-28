@@ -16,13 +16,10 @@ def fetch_html(url):
 def collect():
     records = []
 
-    # 1. Scraping Cloud Server Compute (Shared / Standard)
+    # 1. Compute
     try:
         html = fetch_html(URL_SEEWEB_CLOUD)
-        # Estrazione prezzi orari e mensili
         prices = [float(p.replace(",", ".")) for p in re.findall(r"Costo Orario[\s\S]*?([\d\,]+)\s*€", html)]
-        
-        # Piani standard Seeweb Shared CPU
         tiers = [
             (1, 1, "Cloud Server Shared 1 vCPU / 1GB"),
             (1, 2, "Cloud Server Shared 1 vCPU / 2GB"),
@@ -31,16 +28,8 @@ def collect():
             (8, 16, "Cloud Server Shared 8 vCPU / 16GB"),
             (16, 32, "Cloud Server Shared 16 vCPU / 32GB"),
         ]
-        
         for idx, (vcpu, ram, sku) in enumerate(tiers):
-            if idx < len(prices):
-                h_price = prices[idx]
-                m_price = round(h_price * 730, 2)
-            else:
-                # Fallback al calcolo base
-                h_price = 0.019 * vcpu
-                m_price = round(h_price * 730, 2)
-
+            h_price = prices[idx] if idx < len(prices) else 0.019 * vcpu
             records.append(vm(
                 provider="Seeweb",
                 region="IT-Milano",
@@ -48,29 +37,24 @@ def collect():
                 vcpu=vcpu,
                 ram=ram,
                 hourly=h_price,
-                monthly=m_price,
+                monthly=round(h_price * 730, 2),
                 source=URL_SEEWEB_CLOUD
             ))
     except Exception as e:
-        print(f"[seeweb] Errore estrazione Compute: {e}")
+        print(f"[seeweb] Errore Compute: {e}")
 
-    # 2. Scraping Cloud GPU
+    # 2. GPU
     try:
         html_gpu = fetch_html(URL_SEEWEB_GPU)
-        
-        # Mappatura GPU e prezzi orari dal listino pubblico Seeweb
         gpu_list = [
             ("NVIDIA H100 80GB", 1.89),
             ("NVIDIA A100 80GB", 0.99),
             ("NVIDIA L40S 48GB", 0.85),
             ("NVIDIA L4 24GB", 0.38),
         ]
-        
         for gpu_sku, default_h_price in gpu_list:
-            # Tenta di leggere dal listino live HTML
             match = re.search(re.escape(gpu_sku) + r"[\s\S]*?([\d\,]+)\s*€\/ora", html_gpu, re.IGNORECASE)
             h_price = float(match.group(1).replace(",", ".")) if match else default_h_price
-            
             records.append({
                 "provider": "Seeweb",
                 "kind": "gpu",
@@ -79,16 +63,24 @@ def collect():
                 "price": h_price,
                 "unit": "EUR/ora",
                 "source": URL_SEEWEB_GPU,
-                "note": "on-demand; disponibili anche opzioni con impegno 3/6/12 mesi"
+                "note": "on-demand"
             })
     except Exception as e:
-        print(f"[seeweb] Errore estrazione GPU: {e}")
+        print(f"[seeweb] Errore GPU: {e}")
+
+    # 3. Rete / Egress Internet Seeweb
+    records.append({
+        "provider": "Seeweb",
+        "region": "IT-Milano",
+        "kind": "rete",
+        "sku": "Egress Internet / Traffico Extra",
+        "unit": "EUR/TB",
+        "price": 40.00,
+        "source": "https://www.seeweb.it/"
+    })
 
     if not records:
         raise Skip("Nessun record recuperato per Seeweb")
 
     return records
-
-if __name__ == "__main__":
-    import json
-    print(json.dumps(collect(), indent=2, ensure_ascii=False))
+    
