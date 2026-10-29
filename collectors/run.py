@@ -1,6 +1,5 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
-# OLD Line import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox
 import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
 from common import Skip
 
@@ -29,8 +28,9 @@ SOURCES = (
     ("digitalocean", digitalocean.collect),
     ("exoscale", exoscale.collect),
     ("entersuite", entersuite.collect),
-    ("proxmox", proxmox.collect) # <-- AGGIUNTI QUI
+    ("proxmox", proxmox.collect)
 )
+
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
     try:
@@ -48,7 +48,7 @@ for name, fn in SOURCES:
         status[name] = dict(ok=True, count=len(old), note=str(e), date=today)
     except Exception as e:
         traceback.print_exc()
-        for r in old:   # mantiene l'ultimo dato noto, segnalato come non aggiornato
+        for r in old:    # mantiene l'ultimo dato noto, segnalato come non aggiornato
             r["stale"] = True
         records += old
         status[name] = dict(ok=False, error=str(e)[:200], count=len(old), date=old_status.get(name, {}).get("date"))
