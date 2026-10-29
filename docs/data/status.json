@@ -2,88 +2,88 @@
  "azure": {
   "ok": true,
   "count": 160,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "azure+": {
   "ok": true,
   "count": 2,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "azure-ri": {
   "ok": true,
   "count": 304,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "aws": {
   "ok": true,
   "count": 107,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "aws+": {
   "ok": true,
   "count": 3,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "aws-s3": {
   "ok": true,
   "count": 3,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "ovh": {
   "ok": true,
   "count": 8,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "ovh+": {
   "ok": true,
   "count": 77,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "gcp": {
   "ok": true,
   "count": 32,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "gcp+": {
   "ok": true,
   "count": 0,
   "note": "nessun record",
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "gcp-cud": {
   "ok": true,
   "count": 16,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "gcp-gcs": {
   "ok": true,
   "count": 2,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "hetzner": {
   "ok": true,
   "count": 7,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "azure-gpu": {
   "ok": true,
   "count": 16,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "gcp-gpu": {
   "ok": true,
   "count": 3,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "oracle": {
   "ok": true,
   "count": 11,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "vultr": {
   "ok": true,
   "count": 43,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "linode": {
   "ok": false,
@@ -94,27 +94,27 @@
  "aruba": {
   "ok": true,
   "count": 21,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "seeweb": {
   "ok": true,
   "count": 13,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "stackit": {
   "ok": true,
   "count": 11,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "proxmox": {
   "ok": true,
   "count": 8,
-  "date": "2026-10-28"
+  "date": "2026-10-29"
  },
  "manual": {
   "ok": true,
   "count": 63,
-  "date": "2026-10-28",
+  "date": "2026-10-29",
   "da_compilare": 14
  }
 }
