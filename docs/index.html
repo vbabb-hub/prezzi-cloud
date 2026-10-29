@@ -40,11 +40,20 @@
 
             <!-- Pannello Filtri -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+                
+                <!-- Categorie -->
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Categoria:</span>
                     <div class="flex flex-wrap gap-2" id="category-buttons"></div>
                 </div>
 
+                <!-- Filtro Tipologia Storage (Visibile solo per Storage) -->
+                <div class="border-t border-slate-800 pt-4" id="storage-type-container" style="display: none;">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Tipologia Storage:</span>
+                    <div class="flex flex-wrap gap-2" id="storage-type-buttons"></div>
+                </div>
+
+                <!-- Impegni -->
                 <div class="border-t border-slate-800 pt-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Termine / Impegno:</span>
                     <div class="flex flex-wrap gap-2" id="term-buttons"></div>
@@ -83,12 +92,13 @@
         </main>
     </div>
 
-    <!-- Script Robusto -->
+    <!-- Script JavaScript -->
     <script>
         let allRecords = [];
         let currentCategory = 'compute';
         let currentTerm = 'all';
         let currentProvider = 'all';
+        let currentStorageType = 'all';
         let sortField = 'price';
         let sortAsc = true;
 
@@ -110,6 +120,23 @@
             { id: '3 anni', name: 'Impegno 3 anni' }
         ];
 
+        const storageTypes = [
+            { id: 'all', name: 'Tutti i tipi' },
+            { id: 'object', name: 'Object / S3' },
+            { id: 'block-std', name: 'Blocco Standard' },
+            { id: 'block-hp', name: 'Blocco High Performance / SSD' },
+            { id: 'file', name: 'File / NAS' }
+        ];
+
+        function getStorageType(sku) {
+            const s = (sku || '').toLowerCase();
+            if (s.includes('s3') || s.includes('object') || s.includes('blob') || s.includes('gcs')) return 'object';
+            if (s.includes('premium') || s.includes('ssd') || s.includes('high performance') || s.includes('gp3') || s.includes('io2') || s.includes('nvme')) return 'block-hp';
+            if (s.includes('block') || s.includes('disk') || s.includes('volume') || s.includes('hdd') || s.includes('standard')) return 'block-std';
+            if (s.includes('file') || s.includes('nas') || s.includes('efs')) return 'file';
+            return 'other';
+        }
+
         function renderUI() {
             // Categorie
             document.getElementById('category-buttons').innerHTML = categories.map(c => `
@@ -117,6 +144,19 @@
                     ${c.name}
                 </button>
             `).join('');
+
+            // Tipologie Storage
+            const storageContainer = document.getElementById('storage-type-container');
+            if (currentCategory === 'storage') {
+                storageContainer.style.display = 'block';
+                document.getElementById('storage-type-buttons').innerHTML = storageTypes.map(st => `
+                    <button onclick="setStorageType('${st.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentStorageType === st.id ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                        ${st.name}
+                    </button>
+                `).join('');
+            } else {
+                storageContainer.style.display = 'none';
+            }
 
             // Termini
             document.getElementById('term-buttons').innerHTML = terms.map(t => `
@@ -159,8 +199,15 @@
 
         function setCategory(cat) {
             currentCategory = cat;
+            currentStorageType = 'all';
             document.getElementById('table-title').innerText = `Listino ${categories.find(c => c.id === cat)?.name || cat}`;
             document.getElementById('th-vcpu').style.display = (cat === 'compute') ? '' : 'none';
+            renderUI();
+            renderTable();
+        }
+
+        function setStorageType(st) {
+            currentStorageType = st;
             renderUI();
             renderTable();
         }
@@ -199,6 +246,14 @@
                 const k = (r.kind || r.categoria || '').toLowerCase();
                 if (!matchCategory(k, currentCategory)) return false;
                 if (currentProvider !== 'all' && r.provider !== currentProvider) return false;
+                
+                // Filtro Storage Type
+                if (currentCategory === 'storage' && currentStorageType !== 'all') {
+                    const st = getStorageType(r.sku);
+                    if (st !== currentStorageType) return false;
+                }
+
+                // Filtro Termine
                 if (currentTerm !== 'all') {
                     const t = (r.term || r.impegno || 'On-demand').toLowerCase();
                     if (currentTerm === 'on-demand' && !(t.includes('on-demand') || t === '')) return false;
