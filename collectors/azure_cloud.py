@@ -1,11 +1,10 @@
-from common import TIERS
+from common import vm, TIERS
 
 URL_AZURE = "https://azure.microsoft.com/pricing/"
 
 def collect():
     records = []
     
-    # Famiglie Azure (Dv5, Ev5, Fsv2)
     azure_families = [
         ("Standard_D2s_v5", 2, 8, 0.096),
         ("Standard_D4s_v5", 4, 16, 0.192),
@@ -24,29 +23,18 @@ def collect():
             continue
         od_monthly = od_hourly * 730
         
-        # On-demand
-        records.append({
-            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly, 2), "hourly": round(od_hourly, 4),
-            "term": None, "source": URL_AZURE, "note": "Azure Virtual Machines On-Demand"
-        })
-        # 1 anno
-        records.append({
-            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.72, 2), "hourly": round(od_hourly * 0.72, 4),
-            "term": "Impegno 1 anno", "source": URL_AZURE, "note": "Azure 1-Year Reserved"
-        })
-        # 3 anni
-        records.append({
-            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.52, 2), "hourly": round(od_hourly * 0.52, 4),
-            "term": "Impegno 3 anni", "source": URL_AZURE, "note": "Azure 3-Year Reserved"
-        })
+        r_od = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly, monthly=od_monthly, source=URL_AZURE, note="Azure VM On-Demand")
+        r_od["term"] = "On-demand"
+        records.append(r_od)
+        
+        r_1y = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly * 0.72, monthly=od_monthly * 0.72, source=URL_AZURE, note="Azure 1-Year Reserved")
+        r_1y["term"] = "Impegno 1 anno"
+        records.append(r_1y)
+        
+        r_3y = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly * 0.52, monthly=od_monthly * 0.52, source=URL_AZURE, note="Azure 3-Year Reserved")
+        r_3y["term"] = "Impegno 3 anni"
+        records.append(r_3y)
 
-    # Altre categorie
     records.extend([
         {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Managed Disks Premium SSD", "unit": "EUR/GB/mese", "price": 0.12, "source": URL_AZURE},
         {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Blob Storage Standard", "unit": "EUR/GB/mese", "price": 0.021, "source": URL_AZURE},
@@ -55,7 +43,7 @@ def collect():
         {"provider": "Azure", "region": "italynorth (Milan)", "kind": "gpu", "sku": "NCas_v4 Series (1x AMD MI200)", "unit": "EUR/mese", "price": 920.00, "source": URL_AZURE},
         {"provider": "Azure", "region": "italynorth (Milan)", "kind": "licenses", "sku": "Windows Server Azure Hybrid Benefit", "unit": "EUR/mese", "price": 18.00, "source": URL_AZURE},
         {"provider": "Azure", "region": "italynorth (Milan)", "kind": "k8s", "sku": "AKS Control Plane (Managed)", "unit": "EUR/mese", "price": 0.00, "source": URL_AZURE, "note": "Gratuito"},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "dbaas", "sku": "Azure Database for PostgreSQL (General Purpose)", "unit": "EUR/mese", "price": 140.00, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "dbaas", "sku": "Azure Database for PostgreSQL", "unit": "EUR/mese", "price": 140.00, "source": URL_AZURE},
     ])
 
     return records
