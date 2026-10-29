@@ -1,16 +1,24 @@
-window.__app = "v13";
+window.__app = "v14";
 const $ = s => document.querySelector(s);
-const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"],["colocation", "Colocation"]], ["k8s", "Kubernetes (CaaS)"],
-  ["dbaas", "Database (DBaaS)"];
+const KINDS = [
+  ["compute", "Compute"],
+  ["storage", "Storage"],
+  ["rete", "Rete"],
+  ["gpu", "GPU"],
+  ["colocation", "Colocation"],
+  ["licenza","Licenze"],
+  ["k8s", "Kubernetes (CaaS)"],
+  ["dbaas", "Database (DBaaS)"]
+];
 const TIERS = [2, 4, 8, 16];
-const TERMS = [["od","On-demand"],["1y","Impegno 1 anno"],["3y","Impegno 3 anni"]];
-const TL = {"1y":"impegno 1 anno","3y":"impegno 3 anni"};
+const TERMS = [["od", "On-demand"], ["1y", "Impegno 1 anno"], ["3y", "Impegno 3 anni"]];
+const TL = { "1y": "impegno 1 anno", "3y": "impegno 3 anni" };
 const GROUPS = [
-  ["Hyperscaler", [["AWS","aws"],["Azure","azure"],["GCP","gcp"],["Oracle Cloud","oracle"]]],
-  ["Europei", [["OVHcloud","ovh"],["Hetzner","hetzner"],["Scaleway","scaleway"],["STACKIT","stackit"],["Exoscale","exoscale"],["IONOS","ionos"]]],
-  ["Italiani", [["Aruba Cloud","aruba"],["Seeweb","seeweb"],["Enter Cloud Suite","entersuite"],["Fastweb","fastweb"],["Noovle","noovle"]]],
-  ["Altri", [["DigitalOcean","digitalocean"],["Vultr","vultr"],["Akamai Linode","linode"]]],
-  ["Virtualizzazione", [["Proxmox VE","proxmox"],["VMware","vmware"],["Nutanix","nutanix"]]]
+  ["Hyperscaler", [["AWS", "aws"], ["Azure", "azure"], ["GCP", "gcp"], ["Oracle Cloud", "oracle"]]],
+  ["Europei", [["OVHcloud", "ovh"], ["Hetzner", "hetzner"], ["Scaleway", "scaleway"], ["STACKIT", "stackit"], ["Exoscale", "exoscale"], ["IONOS", "ionos"]]],
+  ["Italiani", [["Aruba Cloud", "aruba"], ["Seeweb", "seeweb"], ["Enter Cloud Suite", "entersuite"], ["Fastweb", "fastweb"], ["Noovle", "noovle"]]],
+  ["Altri", [["DigitalOcean", "digitalocean"], ["Vultr", "vultr"], ["Akamai Linode", "linode"]]],
+  ["Virtualizzazione", [["Proxmox VE", "proxmox"], ["VMware", "vmware"], ["Nutanix", "nutanix"]]]
 ];
 const HELP = {
   GCP: "Mancano i dati perché non è impostato il secret GCP_API_KEY: serve una chiave API di Google (Cloud Billing API) da salvare nei secret del repository GitHub.",
@@ -124,7 +132,7 @@ function ranked() {
     return `<h3>${esc(t)}</h3>` + rows.map((r, i) => {
       const d = i ? ((r.price / m - 1) * 100) : null;
       return `<button type="button" class="row" data-key="${esc(r.key)}"><span class="rk">${i + 1}</span>
-        <span><b>${esc(r.provider)}</b> ${esc(r.sku)}<span class="sub"><span>${esc(r.region)}</span><span>${esc(r.term ? TL[r.term] || r.term : "")}</span></span></span>
+        <span><b>${esc(r.provider)}</b> ${esc(r.sku)}<span class="sub"><span>${esc(r.region)}</span><span>${esc(r.note || "")}</span></span></span>
         <span class="price"><b>${num(r.price, r.price < 1 ? 4 : 2)}</b><small>${i === 0 ? (rows.length > 1 ? `<span class="best">più basso</span>` : "") : d == null ? "" : "+" + num(d, 0) + "%"}</small></span>
         <span>→</span></button>`;
     }).join("");
@@ -133,7 +141,7 @@ function ranked() {
   return `<div class="rows">${out || `<p class="empty">Nessuna voce in questa categoria.</p>`}</div>`;
 }
 
-const prow = r => `<button type="button" class="row" data-key="${esc(r.key)}"><span class="rk">·</span><span><b>${esc(r.sku)}</b><span class="sub"><span>${esc(r.vcpu ? r.vcpu + " vCPU" : "")}</span><span>${esc(r.ram_gb ? r.ram_gb + " GB RAM" : "")}</span><span>${esc(r.region)}</span><span>${esc(r.term ? TL[r.term] || r.term : "")}</span></span></span><span class="price"><b>${num(r.price, r.price < 1 ? 4 : 2)}</b><small>${esc(r.unit)}</small></span><span>→</span></button>`;
+const prow = r => `<button type="button" class="row" data-key="${esc(r.key)}"><span class="rk">·</span><span><b>${esc(r.sku)}</b><span class="sub"><span>${esc(r.vcpu ? r.vcpu + " vCPU" : "")}</span><span>${esc(r.ram_gb ? r.ram_gb + " GB RAM" : "")}</span><span>${esc(r.region)}</span><span>${esc(r.note || "")}</span></span></span><span class="price"><b>${num(r.price, r.price < 1 ? 4 : 2)}</b><small>${esc(r.unit)}</small></span><span>→</span></button>`;
 
 function providerView(name) {
   const rs = S.recs.filter(r => r.provider === name), st = statusOf(KEYOF[name] || name.toLowerCase());
