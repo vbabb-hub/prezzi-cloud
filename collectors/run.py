@@ -1,20 +1,16 @@
-
 import json, pathlib, datetime as dt, traceback
 import yaml
 import aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
-import azure_cloud as azure_coll  # <-- Rinominiamo l'import per evitare conflitti di namespace
+import azure_cloud as azure_coll
 from common import Skip
-
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "data"
 (DATA / "history").mkdir(parents=True, exist_ok=True)
 today = dt.datetime.now(dt.timezone.utc).date().isoformat()
 
-
 def load(p, default):
     return json.loads(p.read_text()) if p.exists() else default
-
 
 prev = load(DATA / "latest.json", {"records": []})["records"]
 old_status = load(DATA / "status.json", {})
@@ -53,7 +49,7 @@ for name, fn in SOURCES:
     except Skip as e:
         records += old
         status[name] = dict(ok=True, count=len(old), note=str(e), date=today)
-except Exception as e:
+    except Exception as e:
         print(f"ERRORE CRITICO NEL COLLECTOR '{name}': {e}")
         traceback.print_exc()
         for r in old:
