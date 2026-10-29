@@ -2,7 +2,7 @@
 import json, pathlib, datetime as dt, traceback
 import yaml
 import aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
-import azure as azure_coll  # <-- Rinominiamo l'import per evitare conflitti di namespace
+import azure_cloud as azure_coll  # <-- Rinominiamo l'import per evitare conflitti di namespace
 from common import Skip
 
 
