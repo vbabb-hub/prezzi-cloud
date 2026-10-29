@@ -14,7 +14,7 @@
             <span class="text-2xl">☁️</span>
             <div>
                 <h1 class="text-lg font-bold">Prezzi Cloud</h1>
-                <p class="text-xs text-slate-400" id="update-info">Caricamento listino...</p>
+                <p class="text-xs text-slate-400" id="update-info">Pronto</p>
             </div>
         </div>
         <button onclick="esportaCSV()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition cursor-pointer">
@@ -25,12 +25,12 @@
     <!-- Layout Principale -->
     <div class="max-w-7xl w-full mx-auto p-6 flex flex-col lg:flex-row gap-6 flex-1">
 
-        <!-- Sidebar Sinistra: Provider con Bandierine -->
+        <!-- Sidebar Sinistra: Provider -->
         <aside class="w-full lg:w-72 flex flex-col gap-4">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Provider</h2>
                 <div class="flex flex-col gap-1 max-h-[calc(100vh-250px)] overflow-y-auto pr-1" id="provider-list">
-                    <span class="text-xs text-slate-500">Caricamento provider...</span>
+                    <!-- Caricato via JS -->
                 </div>
             </div>
         </aside>
@@ -73,4 +73,325 @@
             </div>
 
             <!-- Tabella Risultati -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex-1 flex flex-col">
+                <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <h3 class="font-bold text-sm text-slate-200" id="table-title">Listino Compute</h3>
+                    <span class="text-xs text-slate-400 font-medium" id="result-count">0 elementi trovati</span>
+                </div>
+
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 bg-slate-950/70 text-xs font-bold text-slate-400 uppercase tracking-wider select-none">
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('provider')">Provider ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('sku')">SKU / Servizio ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('region')">Regione ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" id="th-vcpu" onclick="sortData('vcpu')">vCPU / RAM ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('term')">Impegno ↕</th>
+                                <th class="py-3.5 px-4 text-right hover:text-indigo-400 transition cursor-pointer" onclick="sortData('price')">Prezzo ↕</th>
+                                <th class="py-3.5 px-4">Fonte</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-sm" id="table-body">
+                            <tr>
+                                <td colspan="7" class="py-16 text-center text-slate-500 text-sm font-medium">Caricamento dati in corso...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script JavaScript Robusto -->
+    <script>
+        let allRecords = [
+            { provider: "Aruba Cloud", kind: "compute", region: "it-1 (Milano)", sku: "Cloud VPS Small", vcpu: 1, ram: 2, term: "On-demand", price: 2.79, unit: "EUR/mese" },
+            { provider: "Hetzner", kind: "compute", region: "EU (Falkenstein)", sku: "Hetzner Cloud CX11", vcpu: 1, ram: 2, term: "On-demand", price: 3.49, unit: "EUR/mese" },
+            { provider: "Azure", kind: "compute", region: "italynorth (Milan)", sku: "Standard_D2s_v5", vcpu: 2, ram: 8, term: "On-demand", price: 70.08, unit: "EUR/mese" },
+            { provider: "AWS", kind: "compute", region: "eu-south-1 (Milan)", sku: "t3.medium", vcpu: 2, ram: 4, term: "On-demand", price: 35.00, unit: "EUR/mese" }
+        ];
+
+        let currentCategory = 'compute';
+        let currentTerm = 'all';
+        let currentProvider = 'all';
+        let currentStorageType = 'all';
+        let currentGpuType = 'all';
+        let currentVcpuType = 'all';
+        let sortField = 'price';
+        let sortAsc = true;
+
+        const categories = [
+            { id: 'compute', name: 'Compute' },
+            { id: 'storage', name: 'Storage' },
+            { id: 'rete', name: 'Rete' },
+            { id: 'gpu', name: 'GPU' },
+            { id: 'colocation', name: 'Colocation' },
+            { id: 'licenses', name: 'Licenze' },
+            { id: 'k8s', name: 'Kubernetes' },
+            { id: 'dbaas', name: 'Database' }
+        ];
+
+        const terms = [
+            { id: 'all', name: 'Tutti' },
+            { id: 'on-demand', name: 'On-demand' },
+            { id: '1 anno', name: 'Impegno 1 anno' },
+            { id: '3 anni', name: 'Impegno 3 anni' }
+        ];
+
+        const storageTypes = [
+            { id: 'all', name: 'Tutti i tipi' },
+            { id: 'object', name: 'Object / S3' },
+            { id: 'block-std', name: 'Blocco Standard' },
+            { id: 'block-hp', name: 'Blocco High Performance / SSD' },
+            { id: 'file', name: 'File / NAS' }
+        ];
+
+        const gpuTypes = [
+            { id: 'all', name: 'Tutte le GPU' },
+            { id: 'a100', name: 'NVIDIA A100' },
+            { id: 'h100', name: 'NVIDIA H100' },
+            { id: 'l4', name: 'NVIDIA L4 / L40' },
+            { id: 'a10g', name: 'NVIDIA A10G / T4' }
+        ];
+
+        const vcpuTypes = [
+            { id: 'all', name: 'Tutte le taglie' },
+            { id: '1', name: '1 vCPU' },
+            { id: '2', name: '2 vCPU' },
+            { id: '4', name: '4 vCPU' },
+            { id: '8', name: '8 vCPU' },
+            { id: '16', name: '16+ vCPU' }
+        ];
+
+        const providerFlags = {
+            'aruba cloud': '🇮🇹', 'seeweb': '🇮🇹', 'enter cloud suite': '🇮🇹',
+            'aws': '🇺🇸', 'azure': '🇺🇸', 'gcp': '🇺🇸', 'digitalocean': '🇺🇸',
+            'vultr': '🇺🇸', 'oracle cloud': '🇺🇸', 'hetzner': '🇩🇪',
+            'stackit': '🇩🇪', 'ionos': '🇩🇪', 'ovhcloud': '🇫🇷',
+            'scaleway': '🇫🇷', 'exoscale': '🇨🇭', 'akamai linode': '🇺🇸'
+        };
+
+        function getProviderFlag(providerName) {
+            return providerFlags[(providerName || '').toLowerCase().trim()] || '🌐';
+        }
+
+        function getStorageType(sku) {
+            const s = (sku || '').toLowerCase();
+            if (s.includes('s3') || s.includes('object') || s.includes('blob')) return 'object';
+            if (s.includes('premium') || s.includes('ssd') || s.includes('nvme')) return 'block-hp';
+            if (s.includes('block') || s.includes('disk') || s.includes('standard')) return 'block-std';
+            if (s.includes('file') || s.includes('nas')) return 'file';
+            return 'other';
+        }
+
+        function getGpuType(sku) {
+            const s = (sku || '').toLowerCase();
+            if (s.includes('a100')) return 'a100';
+            if (s.includes('h100')) return 'h100';
+            if (s.includes('l4')) return 'l4';
+            if (s.includes('a10') || s.includes('t4')) return 'a10g';
+            return 'all';
+        }
+
+        function getVcpuGroup(vcpu) {
+            const v = Number(vcpu || 0);
+            if (v === 1) return '1';
+            if (v === 2) return '2';
+            if (v === 4) return '4';
+            if (v === 8) return '8';
+            if (v >= 16) return '16';
+            return 'all';
+        }
+
+        function renderUI() {
+            document.getElementById('category-buttons').innerHTML = categories.map(c => `
+                <button onclick="setCategory('${c.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentCategory === c.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${c.name}
+                </button>
+            `).join('');
+
+            const storageContainer = document.getElementById('storage-type-container');
+            if (currentCategory === 'storage') {
+                storageContainer.style.display = 'block';
+                document.getElementById('storage-type-buttons').innerHTML = storageTypes.map(st => `
+                    <button onclick="setStorageType('${st.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentStorageType === st.id ? 'bg-amber-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${st.name}</button>
+                `).join('');
+            } else {
+                storageContainer.style.display = 'none';
+            }
+
+            const gpuContainer = document.getElementById('gpu-type-container');
+            if (currentCategory === 'gpu') {
+                gpuContainer.style.display = 'block';
+                document.getElementById('gpu-type-buttons').innerHTML = gpuTypes.map(gt => `
+                    <button onclick="setGpuType('${gt.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentGpuType === gt.id ? 'bg-purple-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${gt.name}</button>
+                `).join('');
+            } else {
+                gpuContainer.style.display = 'none';
+            }
+
+            const vcpuContainer = document.getElementById('vcpu-type-container');
+            if (currentCategory === 'compute') {
+                vcpuContainer.style.display = 'block';
+                document.getElementById('vcpu-type-buttons').innerHTML = vcpuTypes.map(vt => `
+                    <button onclick="setVcpuType('${vt.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentVcpuType === vt.id ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${vt.name}</button>
+                `).join('');
+            } else {
+                vcpuContainer.style.display = 'none';
+            }
+
+            document.getElementById('term-buttons').innerHTML = terms.map(t => `
+                <button onclick="setTerm('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentTerm === t.id ? 'bg-emerald-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${t.name}</button>
+            `).join('');
+
+            const providers = [...new Set(allRecords.map(r => r.provider))].filter(Boolean).sort();
+            const totalCount = allRecords.filter(r => matchCategory((r.kind || r.categoria || '').toLowerCase(), currentCategory)).length;
+
+            let sidebarHtml = `
+                <button onclick="setProvider('all')" class="w-full flex justify-between items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentProvider === 'all' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}">
+                    <span>🌐 Tutti i Provider</span>
+                    <span class="bg-slate-900/50 px-2 py-0.5 rounded-full text-[10px]">${totalCount}</span>
+                </button>
+            `;
+
+            providers.forEach(p => {
+                const count = allRecords.filter(r => r.provider === p && matchCategory((r.kind || r.categoria || '').toLowerCase(), currentCategory)).length;
+                if (count > 0) {
+                    const flag = getProviderFlag(p);
+                    sidebarHtml += `
+                        <button onclick="setProvider('${p}')" class="w-full flex justify-between items-center px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentProvider === p ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/40 text-slate-300 hover:bg-slate-800'}">
+                            <span class="truncate">${flag} ${p}</span>
+                            <span class="bg-slate-900/50 px-2 py-0.5 rounded-full text-[10px]">${count}</span>
+                        </button>
+                    `;
+                }
+            });
+            document.getElementById('provider-list').innerHTML = sidebarHtml;
+        }
+
+        function matchCategory(k, cat) {
+            if (cat === 'rete') return k === 'rete' || k === 'network';
+            if (cat === 'licenses') return k === 'licenses' || k === 'licenze' || k === 'licenza';
+            if (cat === 'dbaas') return k === 'dbaas' || k === 'database';
+            return k === cat;
+        }
+
+        function setCategory(cat) { currentCategory = cat; currentStorageType = 'all'; currentGpuType = 'all'; currentVcpuType = 'all'; document.getElementById('table-title').innerText = `Listino ${categories.find(c => c.id === cat)?.name || cat}`; document.getElementById('th-vcpu').style.display = (cat === 'compute') ? '' : 'none'; renderUI(); renderTable(); }
+        function setStorageType(st) { currentStorageType = st; renderUI(); renderTable(); }
+        function setGpuType(gt) { currentGpuType = gt; renderUI(); renderTable(); }
+        function setVcpuType(vt) { currentVcpuType = vt; renderUI(); renderTable(); }
+        function setTerm(term) { currentTerm = term; renderUI(); renderTable(); }
+        function setProvider(prov) { currentProvider = prov; renderUI(); renderTable(); }
+
+        function sortData(field) {
+            sortAsc = (sortField === field) ? !sortAsc : true;
+            sortField = field;
+            renderTable();
+        }
+
+        function formatPrice(price, unit) {
+            if (price === null || price === undefined || price === '') return 'Da compilare';
+            return Number(price).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (unit || 'EUR');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            
+            let filtered = allRecords.filter(r => {
+                const k = (r.kind || r.categoria || '').toLowerCase();
+                if (!matchCategory(k, currentCategory)) return false;
+                if (currentProvider !== 'all' && r.provider !== currentProvider) return false;
+                if (currentCategory === 'storage' && currentStorageType !== 'all' && getStorageType(r.sku) !== currentStorageType) return false;
+                if (currentCategory === 'gpu' && currentGpuType !== 'all' && getGpuType(r.sku) !== currentGpuType) return false;
+                if (currentCategory === 'compute' && currentVcpuType !== 'all' && getVcpuGroup(r.vcpu || r.vcpus) !== currentVcpuType) return false;
+                if (currentTerm !== 'all') {
+                    const t = (r.term || r.impegno || 'On-demand').toLowerCase();
+                    if (currentTerm === 'on-demand' && !(t.includes('on-demand') || t === '')) return false;
+                    if (currentTerm === '1 anno' && !t.includes('1 anno')) return false;
+                    if (currentTerm === '3 anni' && !t.includes('3 anni')) return false;
+                }
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                let valA = a[sortField] || a[sortField === 'region' ? 'regione' : sortField === 'vcpu' ? 'vcpus' : sortField] || '';
+                let valB = b[sortField] || b[sortField === 'region' ? 'regione' : sortField === 'vcpu' ? 'vcpus' : sortField] || '';
+                
+                if (sortField === 'price' || sortField === 'vcpu') {
+                    valA = Number(valA) || 0; valB = Number(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase(); valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            document.getElementById('result-count').innerText = `${filtered.length} elementi trovati`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-16 text-center text-slate-500 text-sm font-medium">Nessun record trovato per i filtri selezionati.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                        <span>${getProviderFlag(r.provider)}</span>
+                        <span>${r.provider || ''}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${r.sku || ''}</td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${r.region || r.regione || '-'}</td>
+                    ${currentCategory === 'compute' ? `<td class="py-3.5 px-4 text-slate-300 text-xs font-medium">${r.vcpu || r.vcpus || '-'} vCPU / ${r.ram || r.ram_gb || '-'} GB</td>` : ''}
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${r.term || r.impegno || 'On-demand'}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-bold text-emerald-400 cursor-help" title="${r.note || r.sku}">
+                        <span class="border-b border-dotted border-emerald-500/50 pb-0.5">${formatPrice(r.price, r.unit)}</span>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        ${(r.source || r.fonte) ? `<a href="${r.source || r.fonte}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline font-medium">Link</a>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function esportaCSV() {
+            let csv = 'provider;categoria;regione;sku;vcpu;ram;impegno;unita;prezzo;fonte\n';
+            allRecords.forEach(r => {
+                csv += `"${r.provider || ''}";"${r.kind || r.categoria || ''}";"${r.region || r.regione || ''}";"${r.sku || ''}";"${r.vcpu || r.vcpus || ''}";"${r.ram || r.ram_gb || ''}";"${r.term || r.impegno || 'On-demand'}";"${r.unit || ''}";"${r.price || ''}";"${r.source || r.fonte || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `prezzi-cloud.csv`; a.click();
+        }
+
+        async function loadData() {
+            renderUI();
+            renderTable();
+            const paths = ['data/latest.json', './data/latest.json', 'latest.json'];
+            for (let p of paths) {
+                try {
+                    let res = await fetch(p);
+                    if (res.ok) {
+                        let json = await res.json();
+                        let recs = json.records || json || [];
+                        if (recs.length > 0) {
+                            allRecords = recs;
+                            document.getElementById('update-info').innerText = `Aggiornato al ${json.updated || new Date().toISOString().slice(0,10)}`;
+                            renderUI();
+                            renderTable();
+                            break;
+                        }
+                    }
+                } catch (e) { continue; }
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
