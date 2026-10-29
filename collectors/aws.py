@@ -38,7 +38,7 @@ def collect():
         "source": URL_AWS
     })
 
-    # 3. Networking / Egress Internet
+    # 3. Networking / Egress Internet & Direct Connect (Spostato in rete)
     records.append({
         "provider": "AWS",
         "region": "eu-south-1 (Milan)",
@@ -46,6 +46,15 @@ def collect():
         "sku": "Egress Internet (primi 10TB)",
         "unit": "EUR/TB",
         "price": 90.00,
+        "source": URL_AWS
+    })
+    records.append({
+        "provider": "AWS",
+        "region": "eu-south-1 (Milan)",
+        "kind": "rete",
+        "sku": "AWS Direct Connect Port (1Gbps)",
+        "unit": "EUR/mese",
+        "price": 220.00,
         "source": URL_AWS
     })
 
@@ -61,18 +70,7 @@ def collect():
         "note": "Istanza accelerata con GPU NVIDIA"
     })
 
-    # 5. Colocation (Placeholder / Riferimento rack)
-    records.append({
-        "provider": "AWS",
-        "region": "eu-south-1 (Milan)",
-        "kind": "colocation",
-        "sku": "AWS Direct Connect Port (1Gbps)",
-        "unit": "EUR/mese",
-        "price": 220.00,
-        "source": URL_AWS
-    })
-
-    # 6. Licenses (Windows Server on AWS)
+    # 5. Licenses (Windows Server on AWS)
     records.append({
         "provider": "AWS",
         "region": "eu-south-1 (Milan)",
@@ -83,7 +81,7 @@ def collect():
         "source": URL_AWS
     })
 
-    # 7. Managed Kubernetes (EKS)
+    # 6. Managed Kubernetes (EKS)
     records.append({
         "provider": "AWS",
         "region": "eu-south-1 (Milan)",
@@ -95,7 +93,7 @@ def collect():
         "note": "$0.10/ora fissa per cluster control plane"
     })
 
-    # 8. Managed Database (RDS PostgreSQL)
+    # 7. Managed Database (RDS PostgreSQL)
     records.append({
         "provider": "AWS",
         "region": "eu-south-1 (Milan)",
