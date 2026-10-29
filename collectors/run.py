@@ -53,9 +53,10 @@ for name, fn in SOURCES:
     except Skip as e:
         records += old
         status[name] = dict(ok=True, count=len(old), note=str(e), date=today)
-    except Exception as e:
+except Exception as e:
+        print(f"ERRORE CRITICO NEL COLLECTOR '{name}': {e}")
         traceback.print_exc()
-        for r in old:    # mantiene l'ultimo dato noto, segnalato come non aggiornato
+        for r in old:
             r["stale"] = True
         records += old
         status[name] = dict(ok=False, error=str(e)[:200], count=len(old), date=old_status.get(name, {}).get("date"))
