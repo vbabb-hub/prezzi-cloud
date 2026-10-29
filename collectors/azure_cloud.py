@@ -1,87 +1,61 @@
-from common import vm, TIERS
+from common import TIERS
 
 URL_AZURE = "https://azure.microsoft.com/pricing/"
 
 def collect():
     records = []
     
-    # 1. Compute VM Dsv5-series
-    vm_plans = [
-        ("Standard_D2s_v5", 2, 8, 0.096, 70.08),
-        ("Standard_D4s_v5", 4, 16, 0.192, 140.16),
-        ("Standard_D8s_v5", 8, 32, 0.384, 280.32),
-        ("Standard_D16s_v5", 16, 64, 0.768, 560.64),
+    # Famiglie Azure (Dv5, Ev5, Fsv2)
+    azure_families = [
+        ("Standard_D2s_v5", 2, 8, 0.096),
+        ("Standard_D4s_v5", 4, 16, 0.192),
+        ("Standard_D8s_v5", 8, 32, 0.384),
+        ("Standard_D16s_v5", 16, 64, 0.768),
+        ("Standard_E2s_v5", 2, 16, 0.120),
+        ("Standard_E4s_v5", 4, 32, 0.240),
+        ("Standard_E8s_v5", 8, 64, 0.480),
+        ("Standard_F2s_v2", 2, 4, 0.085),
+        ("Standard_F4s_v2", 4, 8, 0.170),
+        ("Standard_F8s_v2", 8, 16, 0.340),
     ]
-    for sku, vcpu, ram, hourly, monthly in vm_plans:
-        if vcpu in TIERS:
-            records.append(vm("Azure", "Italy North (Milan)", sku, vcpu, ram, hourly, monthly=monthly, source=URL_AZURE, note="General Purpose Dsv5"))
 
-    # 2. Storage Managed Disks & Blob
-    records.append({
-        "provider": "Azure",
-        "region": "Italy North (Milan)",
-        "kind": "storage",
-        "sku": "Premium SSD P10 (128GB)",
-        "unit": "EUR/GB/mese",
-        "price": 0.11,
-        "source": URL_AZURE
-    })
-    records.append({
-        "provider": "Azure",
-        "region": "Italy North (Milan)",
-        "kind": "storage",
-        "sku": "Blob Storage Hot (Object)",
-        "unit": "EUR/GB/mese",
-        "price": 0.018,
-        "source": URL_AZURE
-    })
+    for sku, vcpu, ram, od_hourly in azure_families:
+        if vcpu not in TIERS:
+            continue
+        od_monthly = od_hourly * 730
+        
+        # On-demand
+        records.append({
+            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
+            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
+            "price": round(od_monthly, 2), "hourly": round(od_hourly, 4),
+            "term": None, "source": URL_AZURE, "note": "Azure Virtual Machines On-Demand"
+        })
+        # 1 anno
+        records.append({
+            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
+            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
+            "price": round(od_monthly * 0.72, 2), "hourly": round(od_hourly * 0.72, 4),
+            "term": "Impegno 1 anno", "source": URL_AZURE, "note": "Azure 1-Year Reserved"
+        })
+        # 3 anni
+        records.append({
+            "provider": "Azure", "region": "italynorth (Milan)", "kind": "compute",
+            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
+            "price": round(od_monthly * 0.52, 2), "hourly": round(od_hourly * 0.52, 4),
+            "term": "Impegno 3 anni", "source": URL_AZURE, "note": "Azure 3-Year Reserved"
+        })
 
-    # 3. Rete / Egress Internet
-    records.append({
-        "provider": "Azure",
-        "region": "Italy North (Milan)",
-        "kind": "rete",
-        "sku": "Egress Internet (Standard)",
-        "unit": "EUR/TB",
-        "price": 80.00,
-        "source": URL_AZURE
-    })
-
-    # 4. Managed Kubernetes (AKS)
-    records.append({
-        "provider": "Azure",
-        "region": "Italy North (Milan)",
-        "kind": "k8s",
-        "sku": "AKS Control Plane (Free Tier)",
-        "unit": "EUR/mese",
-        "price": 0.00,
-        "source": "https://azure.microsoft.com/pricing/details/kubernetes-service/",
-        "note": "Control plane gestito gratuito con SLA base"
-    })
-
-    # 5. Database Gestito (Azure Database for PostgreSQL Flexible Server)
-    records.append({
-        "provider": "Azure",
-        "region": "Italy North (Milan)",
-        "kind": "dbaas",
-        "sku": "PostgreSQL Flexible (D2ds_v5 - 2vCPU / 8GB)",
-        "unit": "EUR/mese",
-        "price": 138.00,
-        "source": "https://azure.microsoft.com/pricing/details/postgresql/flexible-server/",
-        "note": "General Purpose Flexible Server"
-    })
+    # Altre categorie
+    records.extend([
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Managed Disks Premium SSD", "unit": "EUR/GB/mese", "price": 0.12, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Blob Storage Standard", "unit": "EUR/GB/mese", "price": 0.021, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "rete", "sku": "Bandwidth Egress (primi 10TB)", "unit": "EUR/TB", "price": 87.00, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "rete", "sku": "ExpressRoute Circuit (1Gbps)", "unit": "EUR/mese", "price": 210.00, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "gpu", "sku": "NCas_v4 Series (1x AMD MI200)", "unit": "EUR/mese", "price": 920.00, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "licenses", "sku": "Windows Server Azure Hybrid Benefit", "unit": "EUR/mese", "price": 18.00, "source": URL_AZURE},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "k8s", "sku": "AKS Control Plane (Managed)", "unit": "EUR/mese", "price": 0.00, "source": URL_AZURE, "note": "Gratuito"},
+        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "dbaas", "sku": "Azure Database for PostgreSQL (General Purpose)", "unit": "EUR/mese", "price": 140.00, "source": URL_AZURE},
+    ])
 
     return records
-
-def extra():
-    return []
-
-def reserved():
-    return []
-
-def gpu():
-    return []
-
-if __name__ == "__main__":
-    import json
-    print(json.dumps(collect(), indent=2, ensure_ascii=False))
