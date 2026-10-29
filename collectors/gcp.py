@@ -72,7 +72,16 @@ def collect():
     })
 
     return records
+    
+def extra():
+    return []
 
+def cud():
+    return []
+
+def gcs():
+    return []
+    
 if __name__ == "__main__":
     import json
     print(json.dumps(collect(), indent=2, ensure_ascii=False))
