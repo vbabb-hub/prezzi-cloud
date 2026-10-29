@@ -1,13 +1,11 @@
-from common import TIERS
+from common import vm, TIERS
 
 URL_AWS = "https://aws.amazon.com/pricing/"
 
 def collect():
     records = []
     
-    # Famiglie EC2 estese (General Purpose, Compute Optimized, Memory Optimized)
     families = [
-        # (Famiglia, vcpu, ram_gb, prezzo_on_demand_orario)
         ("m6i.large", 2, 8, 0.1016),
         ("m6i.xlarge", 4, 16, 0.2032),
         ("m6i.2xlarge", 8, 32, 0.4064),
@@ -29,29 +27,22 @@ def collect():
             continue
         od_monthly = od_hourly * 730
         
-        # 1. On-demand
-        records.append({
-            "provider": "AWS", "region": "eu-south-1 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly, 2), "hourly": round(od_hourly, 4),
-            "term": None, "source": URL_AWS, "note": "AWS EC2 On-Demand"
-        })
-        # 2. Impegno 1 anno (~30% sconto)
-        records.append({
-            "provider": "AWS", "region": "eu-south-1 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.70, 2), "hourly": round(od_hourly * 0.70, 4),
-            "term": "Impegno 1 anno", "source": URL_AWS, "note": "AWS EC2 1-Year Reserved"
-        })
-        # 3. Impegno 3 anni (~50% sconto)
-        records.append({
-            "provider": "AWS", "region": "eu-south-1 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.50, 2), "hourly": round(od_hourly * 0.50, 4),
-            "term": "Impegno 3 anni", "source": URL_AWS, "note": "AWS EC2 3-Year Reserved"
-        })
+        # On-demand (term = "On-demand")
+        r_od = vm("AWS", "eu-south-1 (Milan)", sku, vcpu, ram, od_hourly, monthly=od_monthly, source=URL_AWS, note="AWS EC2 On-Demand")
+        r_od["term"] = "On-demand"
+        records.append(r_od)
+        
+        # Impegno 1 anno
+        r_1y = vm("AWS", "eu-south-1 (Milan)", sku, vcpu, ram, od_hourly * 0.70, monthly=od_monthly * 0.70, source=URL_AWS, note="AWS EC2 1-Year Reserved")
+        r_1y["term"] = "Impegno 1 anno"
+        records.append(r_1y)
+        
+        # Impegno 3 anni
+        r_3y = vm("AWS", "eu-south-1 (Milan)", sku, vcpu, ram, od_hourly * 0.50, monthly=od_monthly * 0.50, source=URL_AWS, note="AWS EC2 3-Year Reserved")
+        r_3y["term"] = "Impegno 3 anni"
+        records.append(r_3y)
 
-    # Altre categorie (Storage, Rete, GPU, Licenze, K8s, DBaaS)
+    # Altre categorie
     records.extend([
         {"provider": "AWS", "region": "eu-south-1 (Milan)", "kind": "storage", "sku": "EBS gp3 (Block Storage)", "unit": "EUR/GB/mese", "price": 0.088, "source": URL_AWS},
         {"provider": "AWS", "region": "eu-south-1 (Milan)", "kind": "storage", "sku": "S3 Standard (Object Storage)", "unit": "EUR/GB/mese", "price": 0.023, "source": URL_AWS},
