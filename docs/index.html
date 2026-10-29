@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prezzi Cloud - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans" x-data="cloudApp()">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
     <!-- Header -->
     <header class="border-b border-slate-800 bg-slate-900 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
@@ -15,10 +14,10 @@
             <span class="text-2xl">☁️</span>
             <div>
                 <h1 class="text-lg font-bold">Prezzi Cloud</h1>
-                <p class="text-xs text-slate-400">Dashboard Comparativa</p>
+                <p class="text-xs text-slate-400" id="update-info">Caricamento in corso...</p>
             </div>
         </div>
-        <button @click="exportCSV()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition">
+        <button onclick="esportaCSV()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition">
             📥 Esporta CSV
         </button>
     </header>
@@ -26,28 +25,205 @@
     <!-- Main Container -->
     <main class="max-w-7xl w-full mx-auto p-6 flex flex-col gap-6 flex-1">
 
-        <!-- Filtri Principali -->
+        <!-- Pannello Filtri -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
             
             <!-- Categorie -->
             <div>
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Categoria:</span>
-                <div class="flex flex-wrap gap-2">
-                    <template x-for="cat in categories" :key="cat.id">
-                        <button @click="selectedCategory = cat.id"
-                            :class="selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
-                            class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"
-                            x-text="cat.name">
-                        </button>
-                    </template>
+                <div class="flex flex-wrap gap-2" id="category-buttons">
+                    <!-- Generato via JS -->
                 </div>
             </div>
 
             <!-- Impegni -->
             <div class="border-t border-slate-800 pt-4">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Termine / Impegno:</span>
-                <div class="flex flex-wrap gap-2">
-                    <template x-for="t in terms" :key="t.id">
-                        <button @click="selectedTerm = t.id"
-                            :class="selectedTerm === t.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
-                            class="px-3.5 py-2 rounded-xl
+                <div class="flex flex-wrap gap-2" id="term-buttons">
+                    <!-- Generato via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Risultati -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex-1 flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <h3 class="font-bold text-sm text-slate-200" id="table-title">Listino Compute</h3>
+                <span class="text-xs text-slate-400 font-medium" id="result-count">0 elementi trovati</span>
+            </div>
+
+            <div class="overflow-x-auto flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-slate-950/70 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="py-3.5 px-4">Provider</th>
+                            <th class="py-3.5 px-4">SKU / Servizio</th>
+                            <th class="py-3.5 px-4">Regione</th>
+                            <th class="py-3.5 px-4" id="th-vcpu">vCPU / RAM</th>
+                            <th class="py-3.5 px-4">Impegno</th>
+                            <th class="py-3.5 px-4 text-right">Prezzo</th>
+                            <th class="py-3.5 px-4">Fonte</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-sm" id="table-body">
+                        <tr>
+                            <td colspan="7" class="py-16 text-center text-slate-500 text-sm font-medium">Caricamento dati in corso...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Script Vanilla JS ad altissima affidabilità -->
+    <script>
+        let allRecords = [];
+        let currentCategory = 'compute';
+        let currentTerm = 'all';
+
+        const categories = [
+            { id: 'compute', name: 'Compute' },
+            { id: 'storage', name: 'Storage' },
+            { id: 'rete', name: 'Rete' },
+            { id: 'gpu', name: 'GPU' },
+            { id: 'colocation', name: 'Colocation' },
+            { id: 'licenses', name: 'Licenze' },
+            { id: 'k8s', name: 'Kubernetes' },
+            { id: 'dbaas', name: 'Database' }
+        ];
+
+        const terms = [
+            { id: 'all', name: 'Tutti' },
+            { id: 'on-demand', name: 'On-demand' },
+            { id: '1 anno', name: 'Impegno 1 anno' },
+            { id: '3 anni', name: 'Impegno 3 anni' }
+        ];
+
+        function renderButtons() {
+            // Categorie
+            const catContainer = document.getElementById('category-buttons');
+            catContainer.innerHTML = categories.map(c => `
+                <button onclick="setCategory('${c.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentCategory === c.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${c.name}
+                </button>
+            `).join('');
+
+            // Termini
+            const termContainer = document.getElementById('term-buttons');
+            termContainer.innerHTML = terms.map(t => `
+                <button onclick="setTerm('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentTerm === t.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${t.name}
+                </button>
+            `).join('');
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('table-title').innerText = `Listino ${categories.find(c => c.id === cat)?.name || cat}`;
+            document.getElementById('th-vcpu').style.display = (cat === 'compute') ? '' : 'none';
+            renderButtons();
+            renderTable();
+        }
+
+        function setTerm(term) {
+            currentTerm = term;
+            renderButtons();
+            renderTable();
+        }
+
+        function formatPrice(price, unit) {
+            if (price === null || price === undefined || price === '') return 'Da compilare';
+            return Number(price).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (unit || 'EUR');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            
+            let filtered = allRecords.filter(r => {
+                const k = (r.kind || r.categoria || '').toLowerCase();
+                if (currentCategory === 'rete') return k === 'rete' || k === 'network';
+                if (currentCategory === 'licenses') return k === 'licenses' || k === 'licenze' || k === 'licenza';
+                if (currentCategory === 'dbaas') return k === 'dbaas' || k === 'database';
+                return k === currentCategory;
+            });
+
+            if (currentTerm !== 'all') {
+                filtered = filtered.filter(r => {
+                    const t = (r.term || r.impegno || 'On-demand').toLowerCase();
+                    if (currentTerm === 'on-demand') return t.includes('on-demand') || t === '';
+                    if (currentTerm === '1 anno') return t.includes('1 anno');
+                    if (currentTerm === '3 anni') return t.includes('3 anni');
+                    return true;
+                });
+            }
+
+            document.getElementById('result-count').innerText = `${filtered.length} elementi trovati`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-16 text-center text-slate-500 text-sm font-medium">Nessun record trovato per i filtri selezionati.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        <span>${r.provider || ''}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${r.sku || ''}</td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${r.region || r.regione || '-'}</td>
+                    ${currentCategory === 'compute' ? `<td class="py-3.5 px-4 text-slate-300 text-xs font-medium">${r.vcpu || r.vcpus || '-'} vCPU / ${r.ram || r.ram_gb || '-'} GB</td>` : ''}
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            ${r.term || r.impegno || 'On-demand'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-bold text-emerald-400">${formatPrice(r.price, r.unit)}</td>
+                    <td class="py-3.5 px-4">
+                        ${(r.source || r.fonte) ? `<a href="${r.source || r.fonte}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline font-medium">Link</a>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function esportaCSV() {
+            let csv = 'provider;categoria;regione;sku;vcpu;ram;impegno;unita;prezzo;fonte\n';
+            allRecords.forEach(r => {
+                csv += `"${r.provider || ''}";"${r.kind || r.categoria || ''}";"${r.region || r.regione || ''}";"${r.sku || ''}";"${r.vcpu || r.vcpus || ''}";"${r.ram || r.ram_gb || ''}";"${r.term || r.impegno || 'On-demand'}";"${r.unit || ''}";"${r.price || ''}";"${r.source || r.fonte || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `prezzi-cloud-${currentCategory}.csv`;
+            a.click();
+        }
+
+        // Caricamento dati all'avvio
+        async function loadData() {
+            renderButtons();
+            try {
+                let res = await fetch('data/latest.json');
+                let json = await res.json();
+                allRecords = json.records || json || [];
+                document.getElementById('update-info').innerText = `Aggiornato al ${json.updated || new Date().toISOString().slice(0,10)}`;
+            } catch (e) {
+                console.error("Errore caricamento da data/latest.json:", e);
+                try {
+                    let res2 = await fetch('latest.json');
+                    let json2 = await res2.json();
+                    allRecords = json2.records || json2 || [];
+                    document.getElementById('update-info').innerText = `Aggiornato al ${json2.updated || 'N/D'}`;
+                } catch (err) {
+                    console.error("Impossibile caricare i dati JSON", err);
+                    document.getElementById('update-info').innerText = 'Errore caricamento dati';
+                }
+            }
+            renderTable();
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
