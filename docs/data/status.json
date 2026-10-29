@@ -6,7 +6,7 @@
  },
  "aws": {
   "ok": true,
-  "count": 14,
+  "count": 19,
   "date": "2026-10-29"
  },
  "ovh": {
@@ -16,7 +16,7 @@
  },
  "gcp": {
   "ok": true,
-  "count": 13,
+  "count": 15,
   "date": "2026-10-29"
  },
  "hetzner": {
