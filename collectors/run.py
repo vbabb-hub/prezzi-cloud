@@ -38,8 +38,7 @@ for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
     try:
         new = fn()
-        #if len(old) > 10 and len(new) < len(old) * 0.5:
-         #   raise RuntimeError(f"solo {len(new)} record contro {len(old)}: formato API cambiato?")
+        # Controllo di soglia rimosso per permettere ai listini statici di caricarsi interamente
         if not new:
             raise Skip("nessun record")
         for r in new:
