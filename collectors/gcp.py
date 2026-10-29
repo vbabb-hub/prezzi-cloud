@@ -5,16 +5,17 @@ URL_GCP = "https://cloud.google.com/pricing"
 def collect():
     records = []
     
-    # 1. Compute Engine N2 Standard
+    # 1. Compute Engine N2 & C2 Standard
     n2_plans = [
         ("n2-standard-2", 2, 8, 0.097, 70.81),
         ("n2-standard-4", 4, 16, 0.194, 141.62),
         ("n2-standard-8", 8, 32, 0.388, 283.24),
         ("n2-standard-16", 16, 64, 0.776, 566.48),
+        ("c2-standard-4", 4, 16, 0.214, 156.22),
     ]
     for sku, vcpu, ram, hourly, monthly in n2_plans:
         if vcpu in TIERS:
-            records.append(vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, hourly, monthly=monthly, source=URL_GCP, note="N2 Standard"))
+            records.append(vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, hourly, monthly=monthly, source=URL_GCP, note="Compute Engine Standard"))
 
     # 2. Storage Persistent Disk & Cloud Storage
     records.append({
@@ -36,7 +37,7 @@ def collect():
         "source": URL_GCP
     })
 
-    # 3. Rete / Egress Internet
+    # 3. Networking / Egress Internet
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -47,7 +48,41 @@ def collect():
         "source": URL_GCP
     })
 
-    # 4. Managed Kubernetes (GKE)
+    # 4. GPU Instances (NVIDIA L4 / T4)
+    records.append({
+        "provider": "GCP",
+        "region": "europe-west8 (Milan)",
+        "kind": "gpu",
+        "sku": "NVIDIA L4 GPU attachment",
+        "unit": "EUR/mese",
+        "price": 540.00,
+        "source": URL_GCP,
+        "note": "acceleratore grafico per IA e rendering"
+    })
+
+    # 5. Colocation / Interconnect
+    records.append({
+        "provider": "GCP",
+        "region": "europe-west8 (Milan)",
+        "kind": "colocation",
+        "sku": "Partner Interconnect Circuit (1Gbps)",
+        "unit": "EUR/mese",
+        "price": 180.00,
+        "source": URL_GCP
+    })
+
+    # 6. Licenses (RHEL / Windows su GCP)
+    records.append({
+        "provider": "GCP",
+        "region": "europe-west8 (Milan)",
+        "kind": "licenses",
+        "sku": "Red Hat Enterprise Linux (RHEL)",
+        "unit": "EUR/mese",
+        "price": 45.00,
+        "source": URL_GCP
+    })
+
+    # 7. Managed Kubernetes (GKE)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -59,7 +94,7 @@ def collect():
         "note": "$0.10/ora per cluster"
     })
 
-    # 5. Database Gestito (Cloud SQL for PostgreSQL)
+    # 8. Managed Database (Cloud SQL PostgreSQL)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -68,7 +103,7 @@ def collect():
         "unit": "EUR/mese",
         "price": 142.00,
         "source": "https://cloud.google.com/sql/pricing",
-        "note": "Istanza gestita db-custom-2-8192"
+        "note": "Managed instance db-custom-2-8192"
     })
 
     return records
