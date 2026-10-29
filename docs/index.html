@@ -53,6 +53,18 @@
                     <div class="flex flex-wrap gap-2" id="storage-type-buttons"></div>
                 </div>
 
+                <!-- Filtro Modello GPU (Visibile solo per GPU) -->
+                <div class="border-t border-slate-800 pt-4" id="gpu-type-container" style="display: none;">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Modello GPU:</span>
+                    <div class="flex flex-wrap gap-2" id="gpu-type-buttons"></div>
+                </div>
+
+                <!-- Filtro Taglia vCPU (Visibile solo per Compute) -->
+                <div class="border-t border-slate-800 pt-4" id="vcpu-type-container" style="display: none;">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Taglia vCPU:</span>
+                    <div class="flex flex-wrap gap-2" id="vcpu-type-buttons"></div>
+                </div>
+
                 <!-- Impegni -->
                 <div class="border-t border-slate-800 pt-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Termine / Impegno:</span>
@@ -99,6 +111,8 @@
         let currentTerm = 'all';
         let currentProvider = 'all';
         let currentStorageType = 'all';
+        let currentGpuType = 'all';
+        let currentVcpuType = 'all';
         let sortField = 'price';
         let sortAsc = true;
 
@@ -128,6 +142,23 @@
             { id: 'file', name: 'File / NAS' }
         ];
 
+        const gpuTypes = [
+            { id: 'all', name: 'Tutte le GPU' },
+            { id: 'a100', name: 'NVIDIA A100' },
+            { id: 'h100', name: 'NVIDIA H100' },
+            { id: 'l4', name: 'NVIDIA L4 / L40' },
+            { id: 'a10g', name: 'NVIDIA A10G / T4' }
+        ];
+
+        const vcpuTypes = [
+            { id: 'all', name: 'Tutte le taglie' },
+            { id: '1', name: '1 vCPU' },
+            { id: '2', name: '2 vCPU' },
+            { id: '4', name: '4 vCPU' },
+            { id: '8', name: '8 vCPU' },
+            { id: '16', name: '16+ vCPU' }
+        ];
+
         function getStorageType(sku) {
             const s = (sku || '').toLowerCase();
             if (s.includes('s3') || s.includes('object') || s.includes('blob') || s.includes('gcs')) return 'object';
@@ -135,6 +166,25 @@
             if (s.includes('block') || s.includes('disk') || s.includes('volume') || s.includes('hdd') || s.includes('standard')) return 'block-std';
             if (s.includes('file') || s.includes('nas') || s.includes('efs')) return 'file';
             return 'other';
+        }
+
+        function getGpuType(sku) {
+            const s = (sku || '').toLowerCase();
+            if (s.includes('a100')) return 'a100';
+            if (s.includes('h100')) return 'h100';
+            if (s.includes('l4') || s.includes('l40')) return 'l4';
+            if (s.includes('a10') || s.includes('t4')) return 'a10g';
+            return 'all';
+        }
+
+        function getVcpuGroup(vcpu) {
+            const v = Number(vcpu || 0);
+            if (v === 1) return '1';
+            if (v === 2) return '2';
+            if (v === 4) return '4';
+            if (v === 8) return '8';
+            if (v >= 16) return '16';
+            return 'all';
         }
 
         function renderUI() {
@@ -156,6 +206,32 @@
                 `).join('');
             } else {
                 storageContainer.style.display = 'none';
+            }
+
+            // Tipologie GPU
+            const gpuContainer = document.getElementById('gpu-type-container');
+            if (currentCategory === 'gpu') {
+                gpuContainer.style.display = 'block';
+                document.getElementById('gpu-type-buttons').innerHTML = gpuTypes.map(gt => `
+                    <button onclick="setGpuType('${gt.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentGpuType === gt.id ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                        ${gt.name}
+                    </button>
+                `).join('');
+            } else {
+                gpuContainer.style.display = 'none';
+            }
+
+            // Taglie vCPU Compute
+            const vcpuContainer = document.getElementById('vcpu-type-container');
+            if (currentCategory === 'compute') {
+                vcpuContainer.style.display = 'block';
+                document.getElementById('vcpu-type-buttons').innerHTML = vcpuTypes.map(vt => `
+                    <button onclick="setVcpuType('${vt.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentVcpuType === vt.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                        ${vt.name}
+                    </button>
+                `).join('');
+            } else {
+                vcpuContainer.style.display = 'none';
             }
 
             // Termini
@@ -200,29 +276,19 @@
         function setCategory(cat) {
             currentCategory = cat;
             currentStorageType = 'all';
+            currentGpuType = 'all';
+            currentVcpuType = 'all';
             document.getElementById('table-title').innerText = `Listino ${categories.find(c => c.id === cat)?.name || cat}`;
             document.getElementById('th-vcpu').style.display = (cat === 'compute') ? '' : 'none';
             renderUI();
             renderTable();
         }
 
-        function setStorageType(st) {
-            currentStorageType = st;
-            renderUI();
-            renderTable();
-        }
-
-        function setTerm(term) {
-            currentTerm = term;
-            renderUI();
-            renderTable();
-        }
-
-        function setProvider(prov) {
-            currentProvider = prov;
-            renderUI();
-            renderTable();
-        }
+        function setStorageType(st) { currentStorageType = st; renderUI(); renderTable(); }
+        function setGpuType(gt) { currentGpuType = gt; renderUI(); renderTable(); }
+        function setVcpuType(vt) { currentVcpuType = vt; renderUI(); renderTable(); }
+        function setTerm(term) { currentTerm = term; renderUI(); renderTable(); }
+        function setProvider(prov) { currentProvider = prov; renderUI(); renderTable(); }
 
         function sortData(field) {
             if (sortField === field) {
@@ -249,8 +315,17 @@
                 
                 // Filtro Storage Type
                 if (currentCategory === 'storage' && currentStorageType !== 'all') {
-                    const st = getStorageType(r.sku);
-                    if (st !== currentStorageType) return false;
+                    if (getStorageType(r.sku) !== currentStorageType) return false;
+                }
+
+                // Filtro GPU Type
+                if (currentCategory === 'gpu' && currentGpuType !== 'all') {
+                    if (getGpuType(r.sku) !== currentGpuType) return false;
+                }
+
+                // Filtro vCPU Compute
+                if (currentCategory === 'compute' && currentVcpuType !== 'all') {
+                    if (getVcpuGroup(r.vcpu || r.vcpus) !== currentVcpuType) return false;
                 }
 
                 // Filtro Termine
