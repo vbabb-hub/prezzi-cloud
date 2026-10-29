@@ -1,60 +1,69 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="h-full bg-slate-950 text-slate-100">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prezzi Cloud | Confronto e Monitoraggio</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prezzi Cloud - Dashboard & Confronto</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js per la reattività -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eef2ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-  <div class="app">
-    <!-- Sidebar / Navigazione -->
-    <aside id="side">
-      <div class="brand">
-        <b>Prezzi cloud</b>
-        <span id="meta">Caricamento dati...</span>
-      </div>
+<body class="h-full flex flex-col font-sans antialiased" x-data="cloudApp()">
 
-      <button type="button" class="pi home" data-v="compare" aria-current="true">
-        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z"/></svg>
-        <span>Confronto</span>
-      </button>
+    <!-- Header & Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl font-bold tracking-wider shadow-lg shadow-indigo-500/20">☁️</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Prezzi Cloud</h1>
+                    <p class="text-xs text-slate-400" x-text="'Aggiornato al ' + (data.updated || 'N/D')"></p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button @click="exportCSV()" class="inline-flex items-center px-3 py-1.5 border border-slate-700 text-xs font-medium rounded-lg text-slate-300 bg-slate-800 hover:bg-slate-700 transition">
+                    📥 Esporta CSV
+                </button>
+            </div>
+        </div>
+    </header>
 
-      <div id="provs">
-        <!-- Popolato dinamicamente -->
-      </div>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
 
-      <details class="stat">
-        <summary>Stato fonti</summary>
-        <div id="status"></div>
-      </details>
-      <div class="ver" id="ver">Interfaccia PWA</div>
-    </aside>
+        <!-- Barra Filtri Superiore (Categorie & Impegni) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shadow-xl">
+            
+            <!-- Categorie (8 Categorie Standard) -->
+            <div class="lg:col-span-2 flex flex-wrap gap-2 items-center">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Categoria:</span>
+                <template x-for="cat in categories" :key="cat.id">
+                    <button @click="selectedCategory = cat.id"
+                        :class="selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer"
+                        x-text="cat.name">
+                    </button>
+                </template>
+            </div>
 
-    <!-- Overlay per mobile -->
-    <div id="scrim"></div>
-
-    <!-- Area Contenuti Principale -->
-    <main>
-      <header class="top">
-        <button id="burger" aria-label="Apri menu">
-          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-        </button>
-        <h1 id="title">Confronto prezzi</h1>
-        <button id="csv" type="button">Esporta CSV</button>
-      </header>
-
-      <!-- Vista Dinamica -->
-      <section id="view">
-        <p class="empty">Caricamento in corso...</p>
-      </section>
-    </main>
-  </div>
-
-  <!-- Popup Modal per Storico Prezzi -->
-  <dialog id="dlg"></dialog>
-
-  <script src="app.js"></script>
-</body>
-</html>
+            <!-- Termini di Impegno -->
+            <div class="flex flex-wrap gap-2 items-center justify-end">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Impegno:</span>
+                <template x-for="t in terms" :key="t">
+                    <button @click="selectedTerm = t"
+                        :class="selectedTerm === t ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer"
+                        x
