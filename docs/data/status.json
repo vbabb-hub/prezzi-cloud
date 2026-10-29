@@ -1,14 +1,12 @@
 {
  "azure": {
-  "ok": false,
-  "error": "solo 9 record contro 160: formato API cambiato?",
-  "count": 160,
+  "ok": true,
+  "count": 9,
   "date": "2026-10-29"
  },
  "aws": {
-  "ok": false,
-  "error": "solo 9 record contro 107: formato API cambiato?",
-  "count": 107,
+  "ok": true,
+  "count": 9,
   "date": "2026-10-29"
  },
  "ovh": {
@@ -17,9 +15,8 @@
   "date": "2026-10-29"
  },
  "gcp": {
-  "ok": false,
-  "error": "solo 9 record contro 32: formato API cambiato?",
-  "count": 32,
+  "ok": true,
+  "count": 9,
   "date": "2026-10-29"
  },
  "hetzner": {
@@ -38,10 +35,9 @@
   "date": "2026-10-29"
  },
  "linode": {
-  "ok": false,
-  "error": "unsupported operand type(s) for *: 'NoneType' and 'float'",
-  "count": 0,
-  "date": null
+  "ok": true,
+  "count": 26,
+  "date": "2026-10-29"
  },
  "aruba": {
   "ok": true,
