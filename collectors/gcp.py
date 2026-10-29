@@ -37,7 +37,7 @@ def collect():
         "source": URL_GCP
     })
 
-    # 3. Networking / Egress Internet
+    # 3. Networking / Egress Internet & Interconnect (Spostato in rete)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -45,6 +45,15 @@ def collect():
         "sku": "Egress Internet Standard",
         "unit": "EUR/TB",
         "price": 85.00,
+        "source": URL_GCP
+    })
+    records.append({
+        "provider": "GCP",
+        "region": "europe-west8 (Milan)",
+        "kind": "rete",
+        "sku": "Partner Interconnect Circuit (1Gbps)",
+        "unit": "EUR/mese",
+        "price": 180.00,
         "source": URL_GCP
     })
 
@@ -60,18 +69,7 @@ def collect():
         "note": "acceleratore grafico per IA e rendering"
     })
 
-    # 5. Colocation / Interconnect
-    records.append({
-        "provider": "GCP",
-        "region": "europe-west8 (Milan)",
-        "kind": "colocation",
-        "sku": "Partner Interconnect Circuit (1Gbps)",
-        "unit": "EUR/mese",
-        "price": 180.00,
-        "source": URL_GCP
-    })
-
-    # 6. Licenses (RHEL / Windows su GCP)
+    # 5. Licenses (RHEL / Windows su GCP)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -82,7 +80,7 @@ def collect():
         "source": URL_GCP
     })
 
-    # 7. Managed Kubernetes (GKE)
+    # 6. Managed Kubernetes (GKE)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
@@ -94,7 +92,7 @@ def collect():
         "note": "$0.10/ora per cluster"
     })
 
-    # 8. Managed Database (Cloud SQL PostgreSQL)
+    # 7. Managed Database (Cloud SQL PostgreSQL)
     records.append({
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
