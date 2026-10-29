@@ -4,7 +4,7 @@ URL_GCP = "https://cloud.google.com/pricing"
 
 def collect():
     records = []
-
+    
     # 1. Compute Engine N2 Standard
     n2_plans = [
         ("n2-standard-2", 2, 8, 0.097, 70.81),
@@ -52,11 +52,11 @@ def collect():
         "provider": "GCP",
         "region": "europe-west8 (Milan)",
         "kind": "k8s",
-        "sku": "GKE Cluster Control Plane (Autopilot / Standard)",
+        "sku": "GKE Cluster Control Plane",
         "unit": "EUR/mese",
         "price": 73.00,
         "source": "https://cloud.google.com/kubernetes-engine/pricing",
-        "note": "$0.10/ora per cluster ($74/mo sconto sul primo cluster per account)"
+        "note": "$0.10/ora per cluster"
     })
 
     # 5. Database Gestito (Cloud SQL for PostgreSQL)
@@ -72,7 +72,7 @@ def collect():
     })
 
     return records
-    
+
 def extra():
     return []
 
@@ -81,10 +81,10 @@ def cud():
 
 def gcs():
     return []
-    
+
 def gpu():
-    return []   
-    
+    return []
+
 if __name__ == "__main__":
     import json
     print(json.dumps(collect(), indent=2, ensure_ascii=False))
