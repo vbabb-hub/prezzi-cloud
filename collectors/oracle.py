@@ -1,60 +1,78 @@
-from common import vm
+from common import vm, TIERS
+
+URL_OCI = "https://www.oracle.com/cloud/pricing/"
 
 def collect():
     records = []
-    tiers = [
-        (1, 2, 8, "VM.Standard.E5.Flex (2 vCPU / 8GB)"),
-        (2, 4, 16, "VM.Standard.E5.Flex (4 vCPU / 16GB)"),
-        (4, 8, 32, "VM.Standard.E5.Flex (8 vCPU / 32GB)"),
-        (8, 16, 64, "VM.Standard.E5.Flex (16 vCPU / 64GB)"),
-        (1, 2, 4, "VM.Standard.E5.Flex (2 vCPU / 4GB)"),
-        (2, 4, 8, "VM.Standard.E5.Flex (4 vCPU / 8GB)"),
-        (4, 8, 16, "VM.Standard.E5.Flex (8 vCPU / 16GB)"),
-        (8, 16, 32, "VM.Standard.E5.Flex (16 vCPU / 32GB)"),
-    ]
-    
-    for ocpu, vcpu, ram, sku in tiers:
-        hourly = (ocpu * 0.0138) + (ram * 0.0018)
-        monthly = round(hourly * 730, 2)
-        records.append(vm(
-            provider="Oracle Cloud",
-            region="EU-Frankfurt",
-            sku=sku,
-            vcpu=vcpu,
-            ram=ram,
-            hourly=hourly,
-            monthly=monthly,
-            source="https://www.oracle.com/cloud/price-list/"
-        ))
 
+    # 1. Compute VM.Standard.A1.Flex (ARM) & E4.Flex (x86)
+    oci_plans = [
+        ("VM.Standard.E4.Flex (2vCPU/8GB)", 2, 8, 0.054, 39.42),
+        ("VM.Standard.E4.Flex (4vCPU/16GB)", 4, 16, 0.108, 78.84),
+        ("VM.Standard.E4.Flex (8vCPU/32GB)", 8, 32, 0.216, 157.68),
+        ("VM.Standard.E4.Flex (16vCPU/64GB)", 16, 64, 0.432, 315.36),
+    ]
+    for sku, vcpu, ram, hourly, monthly in oci_plans:
+        if vcpu in TIERS:
+            records.append(vm("Oracle Cloud", "eu-milan-1", sku, vcpu, ram, hourly, monthly=monthly, source=URL_OCI, note="OCI E4 Flex"))
+
+    # 2. Storage Block Volume & Object Storage
     records.append({
         "provider": "Oracle Cloud",
-        "region": "EU-Frankfurt",
+        "region": "eu-milan-1",
         "kind": "storage",
-        "sku": "Block Volume Storage (Balanced)",
+        "sku": "Block Volume (Performance Balanced)",
         "unit": "EUR/GB/mese",
-        "price": 0.023,
-        "source": "https://www.oracle.com/cloud/price-list/"
+        "price": 0.025,
+        "source": URL_OCI
     })
-    
     records.append({
         "provider": "Oracle Cloud",
-        "region": "EU-Frankfurt",
+        "region": "eu-milan-1",
         "kind": "storage",
         "sku": "Object Storage Standard",
         "unit": "EUR/GB/mese",
         "price": 0.023,
-        "source": "https://www.oracle.com/cloud/price-list/"
+        "source": URL_OCI
     })
 
+    # 3. Rete / Egress Internet
     records.append({
         "provider": "Oracle Cloud",
-        "region": "EU-Frankfurt",
+        "region": "eu-milan-1",
         "kind": "rete",
-        "sku": "Egress Internet (oltre i primi 10TB gratuiti)",
+        "sku": "Egress Internet (Oltre 10TB gratuiti incl.)",
         "unit": "EUR/TB",
         "price": 8.50,
-        "source": "https://www.oracle.com/cloud/price-list/"
+        "source": URL_OCI
+    })
+
+    # 4. Managed Kubernetes (OKE)
+    records.append({
+        "provider": "Oracle Cloud",
+        "region": "eu-milan-1",
+        "kind": "k8s",
+        "sku": "OKE Kubernetes Control Plane (Basic)",
+        "unit": "EUR/mese",
+        "price": 0.00,
+        "source": "https://www.oracle.com/cloud/cloud-native/container-engine-kubernetes/pricing/",
+        "note": "Control plane gestito gratuito per il tier Basic"
+    })
+
+    # 5. Database Gestito (OCI Database with PostgreSQL)
+    records.append({
+        "provider": "Oracle Cloud",
+        "region": "eu-milan-1",
+        "kind": "dbaas",
+        "sku": "OCI Database with PostgreSQL (2vCPU / 8GB)",
+        "unit": "EUR/mese",
+        "price": 68.00,
+        "source": "https://www.oracle.com/database/postgresql/pricing/",
+        "note": "Database gestito ad altissime prestazioni"
     })
 
     return records
+
+if __name__ == "__main__":
+    import json
+    print(json.dumps(collect(), indent=2, ensure_ascii=False))
