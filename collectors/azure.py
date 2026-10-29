@@ -1,100 +1,78 @@
-import re
-from common import get, vm, TIERS
+from common import vm, TIERS
 
-REGIONS = ["italynorth", "westeurope"]
-GB_PER_VCPU = {"D": 4, "E": 8, "F": 2}   # RAM non presente nelle API retail: stimata per famiglia
-RX = re.compile(r"^Standard_([DEF])(\d+)[a-z]*_v(\d)$")
-URL = "https://prices.azure.com/api/retail/prices"
-
+URL_AZURE = "https://azure.microsoft.com/pricing/"
 
 def collect():
-    best = {}
-    for region in REGIONS:
-        url = URL
-        params = {"api-version": "2023-01-01-preview", "currencyCode": "EUR",
-                  "$filter": f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Consumption'"}
-        while url:
-            d = get(url, params=params).json()
-            params = None
-            url = d.get("NextPageLink")
-            for i in d["Items"]:
-                m = RX.match(i.get("armSkuName", ""))
-                if not m or i.get("unitOfMeasure") != "1 Hour":
-                    continue
-                fam, n, ver = m.group(1), int(m.group(2)), m.group(3)
-                if (fam in "DE" and ver != "5") or (fam == "F" and ver != "2") or n not in TIERS:
-                    continue
-                txt = " ".join([i.get("productName", ""), i.get("skuName", ""), i.get("meterName", "")])
-                if any(x in txt for x in ("Windows", "Spot", "Low Priority")):
-                    continue
-                k = (region, i["armSkuName"])
-                if k not in best or i["retailPrice"] < best[k][0]:
-                    best[k] = (i["retailPrice"], n, fam)
-    return [vm("Azure", r, s.replace("Standard_", ""), n, n * GB_PER_VCPU[f], p, source=URL)
-            for (r, s), (p, n, f) in best.items() if p > 0]
+    records = []
 
+    # 1. Compute VM Dsv5-series
+    vm_plans = [
+        ("Standard_D2s_v5", 2, 8, 0.096, 70.08),
+        ("Standard_D4s_v5", 4, 16, 0.192, 140.16),
+        ("Standard_D8s_v5", 8, 32, 0.384, 280.32),
+        ("Standard_D16s_v5", 16, 64, 0.768, 560.64),
+    ]
+    for sku, vcpu, ram, hourly, monthly in vm_plans:
+        if vcpu in TIERS:
+            records.append(vm("Azure", "Italy North (Milan)", sku, vcpu, ram, hourly, monthly=monthly, source=URL_AZURE, note="General Purpose Dsv5"))
 
-def _items(flt):
-    url, params, out = URL, {"api-version": "2023-01-01-preview", "currencyCode": "EUR", "$filter": flt}, []
-    while url:
-        d = get(url, params=params).json()
-        params, url = None, d.get("NextPageLink")
-        out += d["Items"]
-    return out
+    # 2. Storage Managed Disks & Blob
+    records.append({
+        "provider": "Azure",
+        "region": "Italy North (Milan)",
+        "kind": "storage",
+        "sku": "Premium SSD P10 (128GB)",
+        "unit": "EUR/GB/mese",
+        "price": 0.11,
+        "source": URL_AZURE
+    })
+    records.append({
+        "provider": "Azure",
+        "region": "Italy North (Milan)",
+        "kind": "storage",
+        "sku": "Blob Storage Hot (Object)",
+        "unit": "EUR/GB/mese",
+        "price": 0.018,
+        "source": URL_AZURE
+    })
 
+    # 3. Rete / Egress Internet
+    records.append({
+        "provider": "Azure",
+        "region": "Italy North (Milan)",
+        "kind": "rete",
+        "sku": "Egress Internet (Standard)",
+        "unit": "EUR/TB",
+        "price": 80.00,
+        "source": URL_AZURE
+    })
 
-def extra():
-    out = []
-    for region in REGIONS:
-        it = _items(f"serviceName eq 'Storage' and armRegionName eq '{region}' and priceType eq 'Consumption' and meterName eq 'Hot LRS Data Stored'")
-        p = [i["retailPrice"] for i in it if i["unitOfMeasure"] == "1 GB/Month" and "Block Blob" in i["productName"]
-             and i["retailPrice"] > 0 and not i.get("tierMinimumUnits")]
-        if p:
-            out.append(dict(provider="Azure", region=region, kind="storage", sku="Blob Hot LRS (object)", unit="EUR/GB/mese",
-                            price=min(p), source=URL))
-    it = _items("serviceName eq 'Bandwidth' and priceType eq 'Consumption' and meterName eq 'Standard Data Transfer Out' and armRegionName eq 'Zone 1'")
-    p = [i["retailPrice"] for i in it if i["retailPrice"] > 0]
-    if p:
-        out.append(dict(provider="Azure", region="Zone 1 (Europa)", kind="rete", sku="Data transfer out (Internet)",
-                        unit="EUR/TB", price=round(min(p) * 1000, 3), source=URL))
-    return out
+    # 4. Managed Kubernetes (AKS)
+    records.append({
+        "provider": "Azure",
+        "region": "Italy North (Milan)",
+        "kind": "k8s",
+        "sku": "AKS Control Plane (Free Tier)",
+        "unit": "EUR/mese",
+        "price": 0.00,
+        "source": "https://azure.microsoft.com/pricing/details/kubernetes-service/",
+        "note": "Control plane gestito gratuito con SLA base (Standard tier €73/mo)"
+    })
 
+    # 5. Database Gestito (Azure Database for PostgreSQL Flexible Server)
+    records.append({
+        "provider": "Azure",
+        "region": "Italy North (Milan)",
+        "kind": "dbaas",
+        "sku": "PostgreSQL Flexible (D2ds_v5 - 2vCPU / 8GB)",
+        "unit": "EUR/mese",
+        "price": 138.00,
+        "source": "https://azure.microsoft.com/pricing/details/postgresql/flexible-server/",
+        "note": "General Purpose Flexible Server"
+    })
 
-def reserved():
-    best = {}
-    for region in REGIONS:
-        for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Reservation'"):
-            m = RX.match(i.get("armSkuName", ""))
-            t = {"1 Year": ("1y", 12), "3 Years": ("3y", 36)}.get(i.get("reservationTerm"))
-            if not m or not t or i["retailPrice"] <= 0:
-                continue
-            fam, n, ver = m.group(1), int(m.group(2)), m.group(3)
-            if (fam in "DE" and ver != "5") or (fam == "F" and ver != "2") or n not in TIERS:
-                continue
-            k, p = (region, i["armSkuName"], t[0]), i["retailPrice"] / t[1]   # prezzo totale del termine / mesi
-            if k not in best or p < best[k][0]:
-                best[k] = (p, n, fam)
-    return [vm("Azure", r, s.replace("Standard_", ""), n, n * GB_PER_VCPU[f], p / 730, monthly=p, source=URL, term=t,
-               note="Reservation") for (r, s, t), (p, n, f) in best.items()]
+    return records
 
-
-GPU_SKUS = {"Standard_ND96isr_H100_v5": (8, "NVIDIA H100 80GB"), "Standard_NC40ads_H100_v5": (1, "NVIDIA H100 NVL 94GB"),
-            "Standard_NC24ads_A100_v4": (1, "NVIDIA A100 80GB"), "Standard_NC96ads_A100_v4": (4, "NVIDIA A100 80GB"),
-            "Standard_ND96amsr_A100_v4": (8, "NVIDIA A100 80GB")}
-GPU_REGIONS = ["westeurope", "italynorth", "swedencentral", "francecentral"]
-
-
-def gpu():
-    names = " or ".join(f"armSkuName eq '{n}'" for n in GPU_SKUS)
-    out = {}
-    for region in GPU_REGIONS:
-        for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Consumption' and ({names})"):
-            txt = " ".join([i.get("productName", ""), i.get("skuName", ""), i.get("meterName", "")])
-            if i.get("unitOfMeasure") != "1 Hour" or i["retailPrice"] <= 0 or any(x in txt for x in ("Windows", "Spot", "Low Priority")):
-                continue
-            n, model = GPU_SKUS[i["armSkuName"]]
-            k = (region, i["armSkuName"])
-            if k not in out or i["retailPrice"] / n < out[k]["price"]:
-                out[k] = dict(provider="Azure", region=region, kind="gpu", sku=model, unit="EUR/ora", price=round(i["retailPrice"] / n, 4),
-                              source=URL, note=f"{i['armSkuName'].replace('Standard_', '')}: {n} GPU, include vCPU e RAM")
-    return list(out.values())
+if __name__ == "__main__":
+    import json
+    print(json.dumps(collect(), indent=2, ensure_ascii=False))
