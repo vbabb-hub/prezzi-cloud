@@ -1,14 +1,15 @@
 window.__app = "v13";
 const $ = s => document.querySelector(s);
-const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"],["colocation", "Colocation"]];
+const KINDS = [["compute","Compute"],["storage","Storage"],["rete","Rete"],["gpu","GPU"],["licenza","Licenze"],["colocation", "Colocation"]], ["k8s", "Kubernetes (CaaS)"],
+  ["dbaas", "Database (DBaaS)"];
 const TIERS = [2, 4, 8, 16];
 const TERMS = [["od","On-demand"],["1y","Impegno 1 anno"],["3y","Impegno 3 anni"]];
 const TL = {"1y":"impegno 1 anno","3y":"impegno 3 anni"};
 const GROUPS = [
   ["Hyperscaler", [["AWS","aws"],["Azure","azure"],["GCP","gcp"],["Oracle Cloud","oracle"]]],
-  ["Europei", [["OVHcloud","ovh"],["Hetzner","hetzner"],["Scaleway","scaleway"],["STACKIT","stackit"],["IONOS","ionos"]]],
-  ["Italiani", [["Aruba Cloud","aruba"],["Seeweb","seeweb"],["Fastweb","fastweb"],["Noovle","noovle"]]],
-  ["Altri", [["Vultr","vultr"],["Akamai Linode","linode"]]],
+  ["Europei", [["OVHcloud","ovh"],["Hetzner","hetzner"],["Scaleway","scaleway"],["STACKIT","stackit"],["Exoscale","exoscale"],["IONOS","ionos"]]],
+  ["Italiani", [["Aruba Cloud","aruba"],["Seeweb","seeweb"],["Enter Cloud Suite","entersuite"],["Fastweb","fastweb"],["Noovle","noovle"]]],
+  ["Altri", [["DigitalOcean","digitalocean"],["Vultr","vultr"],["Akamai Linode","linode"]]],
   ["Virtualizzazione", [["Proxmox VE","proxmox"],["VMware","vmware"],["Nutanix","nutanix"]]]
 ];
 const HELP = {
