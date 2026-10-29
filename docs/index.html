@@ -9,12 +9,12 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
     <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-900 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <header class="border-b border-slate-800 bg-slate-900 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">☁️</span>
             <div>
                 <h1 class="text-lg font-bold">Prezzi Cloud</h1>
-                <p class="text-xs text-slate-400" id="update-info">Caricamento in corso...</p>
+                <p class="text-xs text-slate-400" id="update-info">Caricamento listino...</p>
             </div>
         </div>
         <button onclick="esportaCSV()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition cursor-pointer">
@@ -22,7 +22,7 @@
         </button>
     </header>
 
-    <!-- Layout Principale con Sidebar e Contenuto -->
+    <!-- Layout Principale -->
     <div class="max-w-7xl w-full mx-auto p-6 flex flex-col lg:flex-row gap-6 flex-1">
 
         <!-- Sidebar Sinistra: Provider -->
@@ -30,7 +30,7 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Provider</h2>
                 <div class="flex flex-col gap-1 max-h-[calc(100vh-250px)] overflow-y-auto pr-1" id="provider-list">
-                    <!-- Generato via JS -->
+                    <span class="text-xs text-slate-500">Caricamento provider...</span>
                 </div>
             </div>
         </aside>
@@ -38,16 +38,13 @@
         <!-- Contenuto Centrale -->
         <main class="flex-1 flex flex-col gap-6">
 
-            <!-- Pannello Filtri (Categorie & Termini) -->
+            <!-- Pannello Filtri -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
-                
-                <!-- Categorie -->
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Categoria:</span>
                     <div class="flex flex-wrap gap-2" id="category-buttons"></div>
                 </div>
 
-                <!-- Impegni -->
                 <div class="border-t border-slate-800 pt-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Termine / Impegno:</span>
                     <div class="flex flex-wrap gap-2" id="term-buttons"></div>
@@ -64,13 +61,13 @@
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-800 bg-slate-950/70 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer select-none">
-                                <th class="py-3.5 px-4 hover:text-indigo-400 transition" onclick="sortData('provider')">Provider ↕</th>
-                                <th class="py-3.5 px-4 hover:text-indigo-400 transition" onclick="sortData('sku')">SKU / Servizio ↕</th>
-                                <th class="py-3.5 px-4 hover:text-indigo-400 transition" onclick="sortData('region')">Regione ↕</th>
-                                <th class="py-3.5 px-4" id="th-vcpu" onclick="sortData('vcpu')">vCPU / RAM ↕</th>
-                                <th class="py-3.5 px-4 hover:text-indigo-400 transition" onclick="sortData('term')">Impegno ↕</th>
-                                <th class="py-3.5 px-4 text-right hover:text-indigo-400 transition" onclick="sortData('price')">Prezzo ↕</th>
+                            <tr class="border-b border-slate-800 bg-slate-950/70 text-xs font-bold text-slate-400 uppercase tracking-wider select-none">
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('provider')">Provider ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('sku')">SKU / Servizio ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('region')">Regione ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" id="th-vcpu" onclick="sortData('vcpu')">vCPU / RAM ↕</th>
+                                <th class="py-3.5 px-4 hover:text-indigo-400 transition cursor-pointer" onclick="sortData('term')">Impegno ↕</th>
+                                <th class="py-3.5 px-4 text-right hover:text-indigo-400 transition cursor-pointer" onclick="sortData('price')">Prezzo ↕</th>
                                 <th class="py-3.5 px-4">Fonte</th>
                             </tr>
                         </thead>
@@ -80,3 +77,225 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script Robusto -->
+    <script>
+        let allRecords = [];
+        let currentCategory = 'compute';
+        let currentTerm = 'all';
+        let currentProvider = 'all';
+        let sortField = 'price';
+        let sortAsc = true;
+
+        const categories = [
+            { id: 'compute', name: 'Compute' },
+            { id: 'storage', name: 'Storage' },
+            { id: 'rete', name: 'Rete' },
+            { id: 'gpu', name: 'GPU' },
+            { id: 'colocation', name: 'Colocation' },
+            { id: 'licenses', name: 'Licenze' },
+            { id: 'k8s', name: 'Kubernetes' },
+            { id: 'dbaas', name: 'Database' }
+        ];
+
+        const terms = [
+            { id: 'all', name: 'Tutti' },
+            { id: 'on-demand', name: 'On-demand' },
+            { id: '1 anno', name: 'Impegno 1 anno' },
+            { id: '3 anni', name: 'Impegno 3 anni' }
+        ];
+
+        function renderUI() {
+            // Categorie
+            document.getElementById('category-buttons').innerHTML = categories.map(c => `
+                <button onclick="setCategory('${c.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentCategory === c.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${c.name}
+                </button>
+            `).join('');
+
+            // Termini
+            document.getElementById('term-buttons').innerHTML = terms.map(t => `
+                <button onclick="setTerm('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentTerm === t.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${t.name}
+                </button>
+            `).join('');
+
+            // Sidebar Provider
+            const providers = [...new Set(allRecords.map(r => r.provider))].filter(Boolean).sort();
+            const totalCount = allRecords.filter(r => matchCategory((r.kind || r.categoria || '').toLowerCase(), currentCategory)).length;
+
+            let sidebarHtml = `
+                <button onclick="setProvider('all')" class="w-full flex justify-between items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${currentProvider === 'all' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'}">
+                    <span>Tutti i Provider</span>
+                    <span class="bg-slate-900/50 px-2 py-0.5 rounded-full text-[10px]">${totalCount}</span>
+                </button>
+            `;
+
+            providers.forEach(p => {
+                const count = allRecords.filter(r => r.provider === p && matchCategory((r.kind || r.categoria || '').toLowerCase(), currentCategory)).length;
+                if (count > 0) {
+                    sidebarHtml += `
+                        <button onclick="setProvider('${p}')" class="w-full flex justify-between items-center px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentProvider === p ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/40 text-slate-300 hover:bg-slate-800'}">
+                            <span class="truncate">${p}</span>
+                            <span class="bg-slate-900/50 px-2 py-0.5 rounded-full text-[10px]">${count}</span>
+                        </button>
+                    `;
+                }
+            });
+            document.getElementById('provider-list').innerHTML = sidebarHtml || '<span class="text-xs text-slate-500">Nessun provider</span>';
+        }
+
+        function matchCategory(k, cat) {
+            if (cat === 'rete') return k === 'rete' || k === 'network';
+            if (cat === 'licenses') return k === 'licenses' || k === 'licenze' || k === 'licenza';
+            if (cat === 'dbaas') return k === 'dbaas' || k === 'database';
+            return k === cat;
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('table-title').innerText = `Listino ${categories.find(c => c.id === cat)?.name || cat}`;
+            document.getElementById('th-vcpu').style.display = (cat === 'compute') ? '' : 'none';
+            renderUI();
+            renderTable();
+        }
+
+        function setTerm(term) {
+            currentTerm = term;
+            renderUI();
+            renderTable();
+        }
+
+        function setProvider(prov) {
+            currentProvider = prov;
+            renderUI();
+            renderTable();
+        }
+
+        function sortData(field) {
+            if (sortField === field) {
+                sortAsc = !sortAsc;
+            } else {
+                sortField = field;
+                sortAsc = true;
+            }
+            renderTable();
+        }
+
+        function formatPrice(price, unit) {
+            if (price === null || price === undefined || price === '') return 'Da compilare';
+            return Number(price).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (unit || 'EUR');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            
+            let filtered = allRecords.filter(r => {
+                const k = (r.kind || r.categoria || '').toLowerCase();
+                if (!matchCategory(k, currentCategory)) return false;
+                if (currentProvider !== 'all' && r.provider !== currentProvider) return false;
+                if (currentTerm !== 'all') {
+                    const t = (r.term || r.impegno || 'On-demand').toLowerCase();
+                    if (currentTerm === 'on-demand' && !(t.includes('on-demand') || t === '')) return false;
+                    if (currentTerm === '1 anno' && !t.includes('1 anno')) return false;
+                    if (currentTerm === '3 anni' && !t.includes('3 anni')) return false;
+                }
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                let valA = a[sortField] || a[sortField === 'region' ? 'regione' : sortField === 'vcpu' ? 'vcpus' : sortField] || '';
+                let valB = b[sortField] || b[sortField === 'region' ? 'regione' : sortField === 'vcpu' ? 'vcpus' : sortField] || '';
+                
+                if (sortField === 'price' || sortField === 'vcpu') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            document.getElementById('result-count').innerText = `${filtered.length} elementi trovati`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-16 text-center text-slate-500 text-sm font-medium">Nessun record trovato per i filtri selezionati.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        <span>${r.provider || ''}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${r.sku || ''}</td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${r.region || r.regione || '-'}</td>
+                    ${currentCategory === 'compute' ? `<td class="py-3.5 px-4 text-slate-300 text-xs font-medium">${r.vcpu || r.vcpus || '-'} vCPU / ${r.ram || r.ram_gb || '-'} GB</td>` : ''}
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            ${r.term || r.impegno || 'On-demand'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-bold text-emerald-400">${formatPrice(r.price, r.unit)}</td>
+                    <td class="py-3.5 px-4">
+                        ${(r.source || r.fonte) ? `<a href="${r.source || r.fonte}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline font-medium">Link</a>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function esportaCSV() {
+            let csv = 'provider;categoria;regione;sku;vcpu;ram;impegno;unita;prezzo;fonte\n';
+            allRecords.forEach(r => {
+                csv += `"${r.provider || ''}";"${r.kind || r.categoria || ''}";"${r.region || r.regione || ''}";"${r.sku || ''}";"${r.vcpu || r.vcpus || ''}";"${r.ram || r.ram_gb || ''}";"${r.term || r.impegno || 'On-demand'}";"${r.unit || ''}";"${r.price || ''}";"${r.source || r.fonte || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `prezzi-cloud-${currentCategory}.csv`;
+            a.click();
+        }
+
+        async function loadData() {
+            renderUI();
+            const paths = ['data/latest.json', './data/latest.json', '../docs/data/latest.json', 'latest.json'];
+            let loaded = false;
+
+            for (let p of paths) {
+                try {
+                    let res = await fetch(p);
+                    if (res.ok) {
+                        let json = await res.json();
+                        allRecords = json.records || json || [];
+                        document.getElementById('update-info').innerText = `Aggiornato al ${json.updated || new Date().toISOString().slice(0,10)}`;
+                        loaded = true;
+                        break;
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+
+            if (!loaded) {
+                document.getElementById('update-info').innerText = 'Errore caricamento file JSON';
+            } else {
+                renderUI();
+                renderTable();
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
