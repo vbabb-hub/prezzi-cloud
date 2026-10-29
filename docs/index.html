@@ -47,19 +47,19 @@
                     <div class="flex flex-wrap gap-2" id="category-buttons"></div>
                 </div>
 
-                <!-- Filtro Tipologia Storage (Visibile solo per Storage) -->
+                <!-- Filtro Tipologia Storage -->
                 <div class="border-t border-slate-800 pt-4" id="storage-type-container" style="display: none;">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Tipologia Storage:</span>
                     <div class="flex flex-wrap gap-2" id="storage-type-buttons"></div>
                 </div>
 
-                <!-- Filtro Modello GPU (Visibile solo per GPU) -->
+                <!-- Filtro Modello GPU -->
                 <div class="border-t border-slate-800 pt-4" id="gpu-type-container" style="display: none;">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Modello GPU:</span>
                     <div class="flex flex-wrap gap-2" id="gpu-type-buttons"></div>
                 </div>
 
-                <!-- Filtro Taglia vCPU (Visibile solo per Compute) -->
+                <!-- Filtro Taglia vCPU -->
                 <div class="border-t border-slate-800 pt-4" id="vcpu-type-container" style="display: none;">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Taglia vCPU:</span>
                     <div class="flex flex-wrap gap-2" id="vcpu-type-buttons"></div>
@@ -188,14 +188,12 @@
         }
 
         function renderUI() {
-            // Categorie
             document.getElementById('category-buttons').innerHTML = categories.map(c => `
                 <button onclick="setCategory('${c.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentCategory === c.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
                     ${c.name}
                 </button>
             `).join('');
 
-            // Tipologie Storage
             const storageContainer = document.getElementById('storage-type-container');
             if (currentCategory === 'storage') {
                 storageContainer.style.display = 'block';
@@ -208,7 +206,6 @@
                 storageContainer.style.display = 'none';
             }
 
-            // Tipologie GPU
             const gpuContainer = document.getElementById('gpu-type-container');
             if (currentCategory === 'gpu') {
                 gpuContainer.style.display = 'block';
@@ -221,7 +218,6 @@
                 gpuContainer.style.display = 'none';
             }
 
-            // Taglie vCPU Compute
             const vcpuContainer = document.getElementById('vcpu-type-container');
             if (currentCategory === 'compute') {
                 vcpuContainer.style.display = 'block';
@@ -234,14 +230,12 @@
                 vcpuContainer.style.display = 'none';
             }
 
-            // Termini
             document.getElementById('term-buttons').innerHTML = terms.map(t => `
                 <button onclick="setTerm('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${currentTerm === t.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
                     ${t.name}
                 </button>
             `).join('');
 
-            // Sidebar Provider
             const providers = [...new Set(allRecords.map(r => r.provider))].filter(Boolean).sort();
             const totalCount = allRecords.filter(r => matchCategory((r.kind || r.categoria || '').toLowerCase(), currentCategory)).length;
 
@@ -313,22 +307,15 @@
                 if (!matchCategory(k, currentCategory)) return false;
                 if (currentProvider !== 'all' && r.provider !== currentProvider) return false;
                 
-                // Filtro Storage Type
                 if (currentCategory === 'storage' && currentStorageType !== 'all') {
                     if (getStorageType(r.sku) !== currentStorageType) return false;
                 }
-
-                // Filtro GPU Type
                 if (currentCategory === 'gpu' && currentGpuType !== 'all') {
                     if (getGpuType(r.sku) !== currentGpuType) return false;
                 }
-
-                // Filtro vCPU Compute
                 if (currentCategory === 'compute' && currentVcpuType !== 'all') {
                     if (getVcpuGroup(r.vcpu || r.vcpus) !== currentVcpuType) return false;
                 }
-
-                // Filtro Termine
                 if (currentTerm !== 'all') {
                     const t = (r.term || r.impegno || 'On-demand').toLowerCase();
                     if (currentTerm === 'on-demand' && !(t.includes('on-demand') || t === '')) return false;
@@ -362,26 +349,32 @@
                 return;
             }
 
-            tbody.innerHTML = filtered.map(r => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                        <span>${r.provider || ''}</span>
-                    </td>
-                    <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${r.sku || ''}</td>
-                    <td class="py-3.5 px-4 text-slate-400 text-xs">${r.region || r.regione || '-'}</td>
-                    ${currentCategory === 'compute' ? `<td class="py-3.5 px-4 text-slate-300 text-xs font-medium">${r.vcpu || r.vcpus || '-'} vCPU / ${r.ram || r.ram_gb || '-'} GB</td>` : ''}
-                    <td class="py-3.5 px-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            ${r.term || r.impegno || 'On-demand'}
-                        </span>
-                    </td>
-                    <td class="py-3.5 px-4 text-right font-bold text-emerald-400">${formatPrice(r.price, r.unit)}</td>
-                    <td class="py-3.5 px-4">
-                        ${(r.source || r.fonte) ? `<a href="${r.source || r.fonte}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline font-medium">Link</a>` : ''}
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = filtered.map(r => {
+                // Tooltip dinamico basato su note, termine o SKU
+                const tooltipText = r.note ? `${r.note}` : `Termine: ${r.term || 'On-demand'} | SKU: ${r.sku}`;
+                return `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                            <span>${r.provider || ''}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${r.sku || ''}</td>
+                        <td class="py-3.5 px-4 text-slate-400 text-xs">${r.region || r.regione || '-'}</td>
+                        ${currentCategory === 'compute' ? `<td class="py-3.5 px-4 text-slate-300 text-xs font-medium">${r.vcpu || r.vcpus || '-'} vCPU / ${r.ram || r.ram_gb || '-'} GB</td>` : ''}
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                ${r.term || r.impegno || 'On-demand'}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-emerald-400 cursor-help" title="${tooltipText}">
+                            <span class="border-b border-dotted border-emerald-500/50 pb-0.5">${formatPrice(r.price, r.unit)}</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            ${(r.source || r.fonte) ? `<a href="${r.source || r.fonte}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline font-medium">Link</a>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function esportaCSV() {
