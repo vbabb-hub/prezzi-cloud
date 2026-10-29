@@ -1,4 +1,4 @@
-from common import TIERS
+from common import vm, TIERS
 
 URL_GCP = "https://cloud.google.com/pricing"
 
@@ -21,27 +21,17 @@ def collect():
             continue
         od_monthly = od_hourly * 730
         
-        # On-demand
-        records.append({
-            "provider": "GCP", "region": "europe-west8 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly, 2), "hourly": round(od_hourly, 4),
-            "term": None, "source": URL_GCP, "note": "GCP Compute Engine On-Demand"
-        })
-        # 1 anno (CUD)
-        records.append({
-            "provider": "GCP", "region": "europe-west8 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.70, 2), "hourly": round(od_hourly * 0.70, 4),
-            "term": "Impegno 1 anno", "source": URL_GCP, "note": "GCP 1-Year Committed Use"
-        })
-        # 3 anni (CUD)
-        records.append({
-            "provider": "GCP", "region": "europe-west8 (Milan)", "kind": "compute",
-            "sku": sku, "vcpus": vcpu, "ram": ram, "unit": "EUR/mese",
-            "price": round(od_monthly * 0.45, 2), "hourly": round(od_hourly * 0.45, 4),
-            "term": "Impegno 3 anni", "source": URL_GCP, "note": "GCP 3-Year Committed Use"
-        })
+        r_od = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly, monthly=od_monthly, source=URL_GCP, note="GCP Compute Engine On-Demand")
+        r_od["term"] = "On-demand"
+        records.append(r_od)
+        
+        r_1y = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly * 0.70, monthly=od_monthly * 0.70, source=URL_GCP, note="GCP 1-Year CUD")
+        r_1y["term"] = "Impegno 1 anno"
+        records.append(r_1y)
+        
+        r_3y = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly * 0.45, monthly=od_monthly * 0.45, source=URL_GCP, note="GCP 3-Year CUD")
+        r_3y["term"] = "Impegno 3 anni"
+        records.append(r_3y)
 
     records.extend([
         {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "storage", "sku": "Persistent Disk Balanced (SSD)", "unit": "EUR/GB/mese", "price": 0.095, "source": URL_GCP},
@@ -51,7 +41,7 @@ def collect():
         {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "gpu", "sku": "NVIDIA L4 GPU attachment", "unit": "EUR/mese", "price": 540.00, "source": URL_GCP},
         {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "licenses", "sku": "Red Hat Enterprise Linux (RHEL)", "unit": "EUR/mese", "price": 45.00, "source": URL_GCP},
         {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "k8s", "sku": "GKE Cluster Control Plane", "unit": "EUR/mese", "price": 73.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "dbaas", "sku": "Cloud SQL PostgreSQL (2vCPU)", "unit": "EUR/mese", "price": 142.00, "source": URL_GCP},
+        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "dbaas", "sku": "Cloud SQL PostgreSQL", "unit": "EUR/mese", "price": 142.00, "source": URL_GCP},
     ])
 
     return records
