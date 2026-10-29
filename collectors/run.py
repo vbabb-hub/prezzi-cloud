@@ -1,7 +1,10 @@
+
 import json, pathlib, datetime as dt, traceback
 import yaml
-import azure, aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
+import aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
+import azure as azure_coll  # <-- Rinominiamo l'import per evitare conflitti di namespace
 from common import Skip
+
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "data"
