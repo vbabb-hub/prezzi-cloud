@@ -4,17 +4,21 @@ URL = "https://api.linode.com/v4/linode/types?page_size=500"
 
 def collect():
     fx, out = usd_eur(), []
-    for t in get(URL).json()["data"]:
+    data = get(URL).json().get("data", [])
+    for t in data:
         if t.get("class") not in ("standard", "dedicated", "highmem") or t["vcpus"] not in TIERS:
             continue
         
-        # Gestione sicura del prezzo mensile con fallback se è None
-        price_info = t.get("price", {})
+        price_info = t.get("price") or {}
         hourly_val = price_info.get("hourly")
         monthly_val = price_info.get("monthly")
         
-        hourly = hourly_val * fx if hourly_val is not None else 0.0
-        monthly = monthly_val * fx if monthly_val is not None else 0.0
+        # Salta i record senza prezzi validi o uguali a zero
+        if hourly_val is None or monthly_val is None or hourly_val <= 0 or monthly_val <= 0:
+            continue
+            
+        hourly = hourly_val * fx
+        monthly = monthly_val * fx
         
         out.append(vm(
             "Akamai Linode", 
