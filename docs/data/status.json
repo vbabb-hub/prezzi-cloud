@@ -1,12 +1,12 @@
 {
  "azure": {
   "ok": true,
-  "count": 9,
+  "count": 38,
   "date": "2026-10-29"
  },
  "aws": {
   "ok": true,
-  "count": 19,
+  "count": 44,
   "date": "2026-10-29"
  },
  "ovh": {
@@ -16,7 +16,7 @@
  },
  "gcp": {
   "ok": true,
-  "count": 15,
+  "count": 29,
   "date": "2026-10-29"
  },
  "hetzner": {
