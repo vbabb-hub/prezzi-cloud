@@ -11,9 +11,16 @@ def collect():
         ("n2-standard-8", 8, 32, 0.388),
         ("n2-standard-16", 16, 64, 0.776),
         ("n2-standard-32", 32, 128, 1.552),
+        ("n2-standard-48", 48, 192, 2.328),
+        ("n2-standard-64", 64, 256, 3.104),
         ("c2-standard-4", 4, 16, 0.214),
         ("c2-standard-8", 8, 32, 0.428),
         ("c2-standard-16", 16, 64, 0.856),
+        ("c2-standard-30", 30, 120, 1.605),
+        ("e2-standard-2", 2, 8, 0.067),
+        ("e2-standard-4", 4, 16, 0.134),
+        ("e2-standard-8", 8, 32, 0.268),
+        ("e2-standard-16", 16, 64, 0.536),
     ]
 
     for sku, vcpu, ram, od_hourly in gcp_families:
