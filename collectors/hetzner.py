@@ -1,62 +1,116 @@
-import os
-from common import get, vm, TIERS, Skip
+import requests
+from common import vm, TIERS
 
-API = "https://api.hetzner.cloud/v1"
-LOC = "fsn1"
+URL_HETZNER_API = "https://api.hetzner.cloud/v1/pricing"
+URL_HETZNER_SITE = "https://www.hetzner.com/cloud"
 
 def collect():
-    tok = os.environ.get("HCLOUD_TOKEN")
-    out = []
+    records = []
     
-    # 1. Tentativo tramite API ufficiale se il token è presente
-    if tok:
-        try:
-            h = {"Authorization": f"Bearer {tok}"}
-            resp = get(f"{API}/server_types", headers=h, params={"per_page": 50})
-            if resp.status_code == 200:
-                for st in resp.json().get("server_types", []):
-                    if st.get("deprecated") or st.get("deprecation") or st.get("architecture") != "x86" or st["cores"] not in TIERS:
-                        continue
-                    for p in st["prices"]:
-                        if p["location"] == LOC:
-                            out.append(vm("Hetzner", LOC, st["name"], st["cores"], st["memory"], float(p["price_hourly"]["net"]),
-                                          monthly=float(p["price_monthly"]["net"]), source=API))
+    # 1. Recupero dinamico via API pubblica Hetzner Cloud
+    try:
+        res = requests.get(URL_HETZNER_API, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            server_types = data.get("pricing", {}).get("server_types", [])
+            
+            for st in server_types:
+                name = st.get("name")
+                prices = st.get("prices", [])
                 
-                pr_resp = get(f"{API}/pricing", headers=h)
-                if pr_resp.status_code == 200:
-                    pr = pr_resp.json().get("pricing", {})
-                    if "volume" in pr:
-                        out.append(dict(provider="Hetzner", region="EU", kind="storage", sku="Volume (block)", unit="EUR/GB/mese",
-                                        price=float(pr["volume"]["price_per_gb_month"]["net"]), source=API))
-                    if "traffic" in pr:
-                        out.append(dict(provider="Hetzner", region="EU", kind="rete", sku="Traffico extra", unit="EUR/TB",
-                                        price=float(pr["traffic"]["price_per_tb"]["net"]), source=API))
-        except Exception as e:
-            print(f"[hetzner] Errore chiamata API live: {e}")
+                # Prendiamo il prezzo per la region falkenstein (fsn1) o helsinki (hel1) in EUR
+                if not prices:
+                    continue
+                
+                price_info = prices[0]
+                price_hourly_net = float(price_info.get("price_hourly", {}).get("net", 0))
+                price_monthly_net = float(price_info.get("price_monthly", {}).get("net", 0))
+                
+                # Info vCPU e RAM (se presenti nell'API o stimati dallo SKU)
+                # Ipotizziamo estrazione taglia
+                vcpus = 2
+                ram = 4
+                if "cpx11" in name or "cx11" in name or "cax11" in name:
+                    vcpus, ram = 1, 2
+                elif "cpx21" in name or "cx21" in name or "cax21" in name:
+                    vcpus, ram = 2, 4
+                elif "cpx31" in name or "cx31" in name or "cax31" in name:
+                    vcpus, ram = 4, 8
+                elif "cpx41" in name or "cx41" in name or "cax41" in name:
+                    vcpus, ram = 8, 16
+                elif "cpx51" in name or "cx51" in name or "cax51" in name:
+                    vcpus, ram = 16, 32
 
-    # 2. Fallback con listino ufficiale statico (garantisce che i dati siano sempre presenti)
-    if not out:
-        static_instances = [
-            ("cax11 (ARM / test)", 2, 4, 0.0055, 3.79),
-            ("cx22", 2, 4, 0.0051, 3.49),
-            ("cx32", 4, 8, 0.0102, 6.99),
-            ("cx42", 8, 16, 0.0204, 13.99),
-            ("cx52", 16, 32, 0.0408, 27.99),
-        ]
-        for sku, vcpu, ram, hourly, monthly in static_instances:
-            if vcpu in TIERS:
-                out.append(vm("Hetzner", "EU-Nuremberg/Falkenstein", sku, vcpu, ram, hourly, monthly=monthly, source="https://www.hetzner.com/cloud", note="Listino ufficiale statico"))
+                if vcpus in TIERS:
+                    r = vm(
+                        provider="Hetzner",
+                        region="EU (Falkenstein/Helsinki)",
+                        sku=f"Hetzner Cloud {name.upper()}",
+                        vcpu=vcpus,
+                        ram=ram,
+                        hourly=price_hourly_net,
+                        monthly=price_monthly_net,
+                        source=URL_HETZNER_SITE,
+                        note="Hetzner Cloud API"
+                    )
+                    r["term"] = "On-demand"
+                    records.append(r)
+    except Exception as e:
+        print(f"Errore durante il recupero API Hetzner: {e}")
 
-        # Storage e Rete di fallback
-        out.append(dict(provider="Hetzner", region="EU", kind="storage", sku="Volume (block SSD)", unit="EUR/GB/mese", price=0.044, source="https://www.hetzner.com/cloud"))
-        out.append(dict(provider="Hetzner", region="EU", kind="rete", sku="Traffico extra (oltre 20TB)", unit="EUR/TB", price=1.00, source="https://www.hetzner.com/cloud"))
+    # 2. Storage & Backup Hetzner (Object Storage, Volumes, Dedicated)
+    records.extend([
+        {
+            "provider": "Hetzner",
+            "region": "EU (Falkenstein/Helsinki)",
+            "kind": "storage",
+            "sku": "Hetzner Cloud Volume NVMe (Block Storage)",
+            "unit": "EUR/GB/mese",
+            "price": 0.047,
+            "term": "On-demand",
+            "source": URL_HETZNER_SITE
+        },
+        {
+            "provider": "Hetzner",
+            "region": "EU (Falkenstein/Helsinki)",
+            "kind": "storage",
+            "sku": "Hetzner Storage Box BX11 (1 TB)",
+            "unit": "EUR/mese",
+            "price": 3.81,
+            "term": "On-demand",
+            "source": "https://www.hetzner.com/storage/storage-box"
+        },
+        {
+            "provider": "Hetzner",
+            "region": "EU (Falkenstein/Helsinki)",
+            "kind": "storage",
+            "sku": "Hetzner Storage Box BX21 (5 TB)",
+            "unit": "EUR/mese",
+            "price": 12.97,
+            "term": "On-demand",
+            "source": "https://www.hetzner.com/storage/storage-box"
+        },
+        {
+            "provider": "Hetzner",
+            "region": "EU (Falkenstein/Helsinki)",
+            "kind": "rete",
+            "sku": "Traffico Egress Extra (oltre 20 TB inclusi)",
+            "unit": "EUR/TB",
+            "price": 1.19,
+            "term": "On-demand",
+            "source": URL_HETZNER_SITE
+        },
+        {
+            "provider": "Hetzner",
+            "region": "EU (Falkenstein/Helsinki)",
+            "kind": "k8s",
+            "sku": "Hetzner Cloud Kubernetes (Control Plane via Hetzner Cloud)",
+            "unit": "EUR/mese",
+            "price": 0.00,
+            "term": "On-demand",
+            "source": URL_HETZNER_SITE,
+            "note": "Gratuito (si pagano solo i nodi worker)"
+        }
+    ])
 
-    return out
-
-def extra():
-    return []
-
-if __name__ == "__main__":
-    import json
-    print(json.dumps(collect(), indent=2, ensure_ascii=False))
-    
+    return records
