@@ -2,82 +2,82 @@
  "azure": {
   "ok": true,
   "count": 44,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "aws": {
   "ok": true,
   "count": 56,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "ovh": {
   "ok": true,
   "count": 8,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "gcp": {
   "ok": true,
   "count": 41,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "hetzner": {
   "ok": true,
   "count": 23,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "oracle": {
   "ok": true,
   "count": 9,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "vultr": {
   "ok": true,
   "count": 43,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "linode": {
   "ok": true,
   "count": 18,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "aruba": {
   "ok": true,
   "count": 31,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "seeweb": {
   "ok": true,
   "count": 13,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "stackit": {
   "ok": true,
   "count": 11,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "digitalocean": {
   "ok": true,
   "count": 6,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "exoscale": {
   "ok": true,
   "count": 5,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "entersuite": {
   "ok": true,
   "count": 5,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "proxmox": {
   "ok": true,
   "count": 8,
-  "date": "2026-10-30"
+  "date": "2026-10-31"
  },
  "manual": {
   "ok": true,
   "count": 63,
-  "date": "2026-10-30",
+  "date": "2026-10-31",
   "da_compilare": 14
  }
 }
