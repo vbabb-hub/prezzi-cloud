@@ -1,13 +1,16 @@
 {
  "azure": {
   "ok": true,
-  "count": 44,
-  "date": "2026-11-02"
+  "count": 306,
+  "date": "2026-11-02",
+  "verified_schema": 1,
+  "note": "compute westeurope: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
  },
  "aws": {
   "ok": true,
-  "count": 56,
-  "date": "2026-11-02"
+  "count": 185,
+  "date": "2026-11-02",
+  "verified_schema": 1
  },
  "ovh": {
   "ok": true,
@@ -15,14 +18,18 @@
   "date": "2026-11-02"
  },
  "gcp": {
-  "ok": true,
-  "count": 41,
-  "date": "2026-11-02"
+  "ok": false,
+  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
+  "count": 0,
+  "date": "2026-11-02",
+  "verified_schema": null
  },
  "hetzner": {
   "ok": true,
-  "count": 23,
-  "date": "2026-11-02"
+  "count": 0,
+  "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali di manual/hetzner.yml",
+  "date": "2026-11-02",
+  "verified_schema": 1
  },
  "oracle": {
   "ok": true,
@@ -42,12 +49,14 @@
  "aruba": {
   "ok": true,
   "count": 22,
-  "date": "2026-11-02"
+  "date": "2026-11-02",
+  "verified_schema": 1
  },
  "seeweb": {
   "ok": true,
   "count": 30,
-  "date": "2026-11-02"
+  "date": "2026-11-02",
+  "verified_schema": 1
  },
  "stackit": {
   "ok": true,
@@ -76,7 +85,7 @@
  },
  "manual": {
   "ok": true,
-  "count": 55,
+  "count": 50,
   "date": "2026-11-02",
   "da_compilare": 14
  }
