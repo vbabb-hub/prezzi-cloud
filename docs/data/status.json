@@ -41,12 +41,12 @@
  },
  "aruba": {
   "ok": true,
-  "count": 31,
+  "count": 22,
   "date": "2026-11-02"
  },
  "seeweb": {
   "ok": true,
-  "count": 13,
+  "count": 30,
   "date": "2026-11-02"
  },
  "stackit": {
@@ -76,7 +76,7 @@
  },
  "manual": {
   "ok": true,
-  "count": 63,
+  "count": 55,
   "date": "2026-11-02",
   "da_compilare": 14
  }
