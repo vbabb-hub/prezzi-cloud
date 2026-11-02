@@ -1,4 +1,4 @@
-import json, pathlib, datetime as dt, traceback
+import json, pathlib, sys, datetime as dt, traceback
 import yaml
 import aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
 import azure_cloud as azure_coll
@@ -45,6 +45,9 @@ for name, fn in SOURCES:
             r["src"] = name
         records += new
         status[name] = dict(ok=True, count=len(new), date=today)
+        warns = getattr(sys.modules.get(fn.__module__), "WARNINGS", [])
+        if warns:
+            status[name]["note"] = "; ".join(dict.fromkeys(warns))[:300]
     except Skip as e:
         records += old
         status[name] = dict(ok=True, count=len(old), note=str(e), date=today)

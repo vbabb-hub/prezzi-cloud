@@ -40,3 +40,22 @@ def vm(provider, region, sku, vcpu, ram, hourly, monthly=None, source="", term=N
     if note:
         r["note"] = note
     return r
+
+
+def check_page(url, values, decimals=2, min_ratio=0.8):
+    """Controlla online che il listino ufficiale riporti ancora i prezzi della tabella locale.
+    Restituisce un avviso (stringa) se meno dell'80% dei prezzi viene ritrovato, altrimenti None."""
+    try:
+        text = get(url, headers={"User-Agent": "Mozilla/5.0"}).text
+    except Exception as e:
+        return f"verifica online non riuscita ({sanitize(str(e))[:80]})"
+    found = 0
+    for v in values:
+        s = f"{v:.{decimals}f}"
+        for cand in (s, s.replace(".", ",")):
+            if re.search(rf"(?<![\d.,]){re.escape(cand)}(?!\d)", text):
+                found += 1
+                break
+    if values and found / len(values) < min_ratio:
+        return f"listino online cambiato? ritrovati {found}/{len(values)} prezzi in {url}"
+    return None
