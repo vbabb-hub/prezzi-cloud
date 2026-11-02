@@ -1,55 +1,109 @@
-from common import vm, TIERS
+"""Azure: Retail Prices API ufficiale (pubblica, nessuna chiave), prezzi in EUR.
+On-demand (pay-as-you-go), Reservation a 1 e 3 anni (prezzo totale del termine / mesi), Blob Hot LRS, traffico in uscita,
+VM GPU. La RAM non è nell'API: è quella della famiglia (D v5 = 4, E v5 = 8, F v2 = 2 GB per vCPU). Nessun prezzo stimato."""
+import re
+from common import get, vm, sanitize, TIERS
 
-URL_AZURE = "https://azure.microsoft.com/pricing/"
+URL = "https://prices.azure.com/api/retail/prices"
+REGIONS = {"italynorth": "Milano", "westeurope": "Paesi Bassi"}
+GB_PER_VCPU = {"D": 4, "E": 8, "F": 2}
+RX = re.compile(r"^Standard_([DEF])(\d+)[a-z]*_v(\d)$")
+RESERVATION = {"1 Year": ("Impegno 1 anno", 12), "3 Years": ("Impegno 3 anni", 36)}
+GPU_SKUS = {"Standard_ND96isr_H100_v5": (8, "NVIDIA H100 80GB"), "Standard_NC40ads_H100_v5": (1, "NVIDIA H100 NVL 94GB"),
+            "Standard_NC24ads_A100_v4": (1, "NVIDIA A100 80GB"), "Standard_NC96ads_A100_v4": (4, "NVIDIA A100 80GB"),
+            "Standard_ND96amsr_A100_v4": (8, "NVIDIA A100 80GB")}
+GPU_REGIONS = {"westeurope": "Paesi Bassi", "italynorth": "Milano", "swedencentral": "Svezia", "francecentral": "Francia"}
+WARNINGS = []
+
+
+def _items(flt):
+    url, params, out = URL, {"api-version": "2023-01-01-preview", "currencyCode": "EUR", "$filter": flt}, []
+    while url:
+        d = get(url, params=params).json()
+        params, url = None, d.get("NextPageLink")
+        out += d["Items"]
+    return out
+
+
+def _family_ok(m):
+    fam, n, ver = m.group(1), int(m.group(2)), m.group(3)
+    return n in TIERS and ((fam in "DE" and ver == "5") or (fam == "F" and ver == "2"))
+
+
+def _compute(region, out):
+    label = f"{region} ({REGIONS[region]})"
+    best = {}
+    for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Consumption'"):
+        m = RX.match(i.get("armSkuName", ""))
+        txt = " ".join([i.get("productName", ""), i.get("skuName", ""), i.get("meterName", "")])
+        if not m or not _family_ok(m) or i.get("unitOfMeasure") != "1 Hour" or i["retailPrice"] <= 0 or any(x in txt for x in ("Windows", "Spot", "Low Priority")):
+            continue
+        k = i["armSkuName"]
+        if k not in best or i["retailPrice"] < best[k][0]:
+            best[k] = (i["retailPrice"], m)
+    for sku, (hourly, m) in best.items():
+        n = int(m.group(2))
+        out.append(vm("Azure", label, sku.replace("Standard_", ""), n, n * GB_PER_VCPU[m.group(1)], hourly, source=URL,
+                      term="On-demand", note="pay-as-you-go, Linux"))
+    res = {}
+    for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Reservation'"):
+        m, t = RX.match(i.get("armSkuName", "")), RESERVATION.get(i.get("reservationTerm"))
+        if not m or not t or not _family_ok(m) or i["retailPrice"] <= 0:
+            continue
+        k, monthly = (i["armSkuName"], t[0]), i["retailPrice"] / t[1]
+        if k not in res or monthly < res[k][0]:
+            res[k] = (monthly, m)
+    for (sku, term), (monthly, m) in res.items():
+        n = int(m.group(2))
+        out.append(vm("Azure", label, sku.replace("Standard_", ""), n, n * GB_PER_VCPU[m.group(1)], monthly / 730, monthly=monthly,
+                      source=URL, term=term, note="Reservation (prezzo del termine / mesi)"))
+
+
+def _storage_network(out):
+    for region in REGIONS:
+        it = _items(f"serviceName eq 'Storage' and armRegionName eq '{region}' and priceType eq 'Consumption' and meterName eq 'Hot LRS Data Stored'")
+        p = [i["retailPrice"] for i in it if i["unitOfMeasure"] == "1 GB/Month" and "Block Blob" in i["productName"]
+             and i["retailPrice"] > 0 and not i.get("tierMinimumUnits")]
+        if p:
+            out.append(dict(provider="Azure", region=f"{region} ({REGIONS[region]})", kind="storage", sku="Blob Hot LRS (object)",
+                            unit="EUR/GB/mese", price=min(p), term="On-demand", source=URL))
+    it = _items("serviceName eq 'Bandwidth' and priceType eq 'Consumption' and meterName eq 'Standard Data Transfer Out' and armRegionName eq 'Zone 1'")
+    p = [i["retailPrice"] for i in it if i["retailPrice"] > 0]
+    if p:
+        out.append(dict(provider="Azure", region="Zone 1 (Europa)", kind="rete", sku="Data transfer out (Internet)", unit="EUR/TB",
+                        price=round(min(p) * 1000, 3), term="On-demand", source=URL, note="primo scaglione a pagamento"))
+
+
+def _gpu(out):
+    names = " or ".join(f"armSkuName eq '{n}'" for n in GPU_SKUS)
+    best = {}
+    for region in GPU_REGIONS:
+        for i in _items(f"serviceName eq 'Virtual Machines' and armRegionName eq '{region}' and priceType eq 'Consumption' and ({names})"):
+            txt = " ".join([i.get("productName", ""), i.get("skuName", ""), i.get("meterName", "")])
+            if i.get("unitOfMeasure") != "1 Hour" or i["retailPrice"] <= 0 or any(x in txt for x in ("Windows", "Spot", "Low Priority")):
+                continue
+            n, model = GPU_SKUS[i["armSkuName"]]
+            k = (region, i["armSkuName"])
+            if k not in best or i["retailPrice"] / n < best[k]["price"]:
+                best[k] = dict(provider="Azure", region=f"{region} ({GPU_REGIONS[region]})", kind="gpu", sku=model, unit="EUR/ora",
+                               price=round(i["retailPrice"] / n, 4), term="On-demand", source=URL,
+                               note=f"{i['armSkuName'].replace('Standard_', '')}: {n} GPU, include vCPU e RAM")
+    out.extend(best.values())
+
 
 def collect():
-    records = []
-    
-    azure_families = [
-        ("Standard_D2s_v5", 2, 8, 0.096),
-        ("Standard_D4s_v5", 4, 16, 0.192),
-        ("Standard_D8s_v5", 8, 32, 0.384),
-        ("Standard_D16s_v5", 16, 64, 0.768),
-        ("Standard_D32s_v5", 32, 128, 1.536),
-        ("Standard_D64s_v5", 64, 256, 3.072),
-        ("Standard_E2s_v5", 2, 16, 0.120),
-        ("Standard_E4s_v5", 4, 32, 0.240),
-        ("Standard_E8s_v5", 8, 64, 0.480),
-        ("Standard_E16s_v5", 16, 128, 0.960),
-        ("Standard_E32s_v5", 32, 256, 1.920),
-        ("Standard_F2s_v2", 2, 4, 0.085),
-        ("Standard_F4s_v2", 4, 8, 0.170),
-        ("Standard_F8s_v2", 8, 16, 0.340),
-        ("Standard_F16s_v2", 16, 32, 0.680),
-        ("Standard_F32s_v2", 32, 64, 1.360),
-    ]
-
-    for sku, vcpu, ram, od_hourly in azure_families:
-        if vcpu not in TIERS:
-            continue
-        od_monthly = od_hourly * 730
-        
-        r_od = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly, monthly=od_monthly, source=URL_AZURE, note="Azure VM On-Demand")
-        r_od["term"] = "On-demand"
-        records.append(r_od)
-        
-        r_1y = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly * 0.72, monthly=od_monthly * 0.72, source=URL_AZURE, note="Azure 1-Year Reserved")
-        r_1y["term"] = "Impegno 1 anno"
-        records.append(r_1y)
-        
-        r_3y = vm("Azure", "italynorth (Milan)", sku, vcpu, ram, od_hourly * 0.52, monthly=od_monthly * 0.52, source=URL_AZURE, note="Azure 3-Year Reserved")
-        r_3y["term"] = "Impegno 3 anni"
-        records.append(r_3y)
-
-    records.extend([
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Managed Disks Premium SSD", "unit": "EUR/GB/mese", "price": 0.12, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "storage", "sku": "Blob Storage Standard", "unit": "EUR/GB/mese", "price": 0.021, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "rete", "sku": "Bandwidth Egress (primi 10TB)", "unit": "EUR/TB", "price": 87.00, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "rete", "sku": "ExpressRoute Circuit (1Gbps)", "unit": "EUR/mese", "price": 210.00, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "gpu", "sku": "NCas_v4 Series (1x AMD MI200)", "unit": "EUR/mese", "price": 920.00, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "licenses", "sku": "Windows Server Azure Hybrid Benefit", "unit": "EUR/mese", "price": 18.00, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "k8s", "sku": "AKS Control Plane (Managed)", "unit": "EUR/mese", "price": 0.00, "source": URL_AZURE},
-        {"provider": "Azure", "region": "italynorth (Milan)", "kind": "dbaas", "sku": "Azure Database for PostgreSQL", "unit": "EUR/mese", "price": 140.00, "source": URL_AZURE},
-    ])
-
-    return records
+    WARNINGS.clear()
+    out = []
+    for region in REGIONS:
+        try:
+            _compute(region, out)
+        except Exception as e:
+            WARNINGS.append(f"compute {region}: {sanitize(str(e))[:80]}")
+    if not any(r["kind"] == "compute" for r in out):
+        raise RuntimeError("Azure: nessun prezzo compute letto dalla Retail Prices API. " + "; ".join(WARNINGS))
+    for fn in (_storage_network, _gpu):
+        try:
+            fn(out)
+        except Exception as e:
+            WARNINGS.append(f"{fn.__name__.strip('_')}: {sanitize(str(e))[:80]}")
+    return out

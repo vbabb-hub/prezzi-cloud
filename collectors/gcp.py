@@ -1,59 +1,118 @@
-from common import vm, TIERS
+"""GCP: Cloud Billing Catalog API ufficiale. Serve una chiave API gratuita nel secret GCP_API_KEY (limitata alla sola
+Cloud Billing API); senza chiave la fonte viene saltata e GCP resta vuoto: nessun prezzo stimato. Prezzi in EUR.
+Compute N2 (core + RAM), Committed Use 1 e 3 anni, Persistent Disk Balanced, Cloud Storage Standard, GPU, traffico."""
+import os, re
+from common import get, vm, sanitize, Skip, TIERS
 
-URL_GCP = "https://cloud.google.com/pricing"
+SVC = "https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus"   # Compute Engine
+GCS = "https://cloudbilling.googleapis.com/v1/services/95FF-2EF5-5EA1/skus"   # Cloud Storage
+CITY = {"europe-west8": "Milan", "europe-west3": "Frankfurt"}   # nome usato da Google nelle descrizioni delle SKU
+REGIONS = set(CITY)
+GPU_REGIONS = {"europe-west4", "europe-west3", "europe-west1", "europe-west8"}
+LABEL = {"europe-west8": "Milano", "europe-west3": "Francoforte", "europe-west4": "Paesi Bassi", "europe-west1": "Belgio"}
+BAD = ("Spot", "Preemptible", "Commitment", "Custom", "Sole Tenant", "Extended", "Confidential")
+CUD = re.compile(r"^Commitment v1: N2 (Cpu|Ram) in (.+) for (1|3) Years?$")
+GPU_RX = re.compile(r"^Nvidia (?:Tesla )?(A100 80GB|A100|H100 80GB|L4|L40S) GPU running in (.+)$")
+GPU_MODEL = {"A100": "NVIDIA A100 40GB", "A100 80GB": "NVIDIA A100 80GB", "H100 80GB": "NVIDIA H100 80GB", "L4": "NVIDIA L4 24GB", "L40S": "NVIDIA L40S 48GB"}
+TERM = {"1": "Impegno 1 anno", "3": "Impegno 3 anni"}
+WARNINGS = []
+
+
+def _lab(r):
+    return f"{r} ({LABEL[r]})"
+
+
+def _tiers(s):
+    return [int(t["unitPrice"].get("units", 0) or 0) + t["unitPrice"].get("nanos", 0) / 1e9
+            for t in s["pricingInfo"][0]["pricingExpression"]["tieredRates"]]
+
+
+def _skus(key, svc):
+    tok = None
+    while True:
+        p = {"key": key, "currencyCode": "EUR", "pageSize": 5000}
+        if tok:
+            p["pageToken"] = tok
+        d = get(svc, params=p).json()
+        yield from d.get("skus", [])
+        tok = d.get("nextPageToken")
+        if not tok:
+            break
+
+
+def _compute(key, out):
+    core, ram, cud_core, cud_ram, disk, egr, gpu = {}, {}, {}, {}, {}, {}, {}
+    for s in _skus(key, SVC):
+        c, desc, regs = s.get("category", {}), s["description"], set(s.get("serviceRegions", []))
+        m = CUD.match(desc)
+        if m and regs & REGIONS:
+            (cud_core if m.group(1) == "Cpu" else cud_ram)[(next(iter(regs & REGIONS)), m.group(3))] = _tiers(s)[0]
+            continue
+        if any(b in desc for b in BAD) or c.get("usageType") != "OnDemand":
+            continue
+        p = _tiers(s)
+        if regs & REGIONS:
+            r = next(iter(regs & REGIONS))
+            if desc == f"N2 Instance Core running in {CITY[r]}":
+                core[r] = p[0]
+            elif desc == f"N2 Instance Ram running in {CITY[r]}":
+                ram[r] = p[0]
+            elif desc.startswith("Balanced PD Capacity"):
+                disk[r] = p[0]
+            elif c.get("resourceGroup") == "PremiumInternetEgress" and "Worldwide" in desc:
+                pos = [x for x in p if x > 0]
+                if pos:
+                    egr[r] = min(egr.get(r, 9e9), pos[0])
+        mg = GPU_RX.match(desc)
+        if mg and regs & GPU_REGIONS and p[0] > 0:
+            k = (next(iter(regs & GPU_REGIONS)), mg.group(1))
+            gpu[k] = min(gpu.get(k, 9e9), p[0])
+    for r in core:
+        if r in ram:
+            for n in sorted(TIERS):
+                out.append(vm("GCP", _lab(r), f"n2-standard-{n}", n, n * 4, n * core[r] + n * 4 * ram[r], source=SVC,
+                              term="On-demand", note="Compute Engine on-demand, Linux"))
+    for (r, t), c in cud_core.items():
+        if (r, t) in cud_ram:
+            for n in sorted(TIERS):
+                out.append(vm("GCP", _lab(r), f"n2-standard-{n}", n, n * 4, n * c + n * 4 * cud_ram[(r, t)], source=SVC,
+                              term=TERM[t], note="Committed Use Discount, Linux"))
+    for r, v in disk.items():
+        out.append(dict(provider="GCP", region=_lab(r), kind="storage", sku="Persistent Disk Balanced (block)",
+                        unit="EUR/GB/mese", price=round(v, 5), term="On-demand", source=SVC))
+    for r, v in egr.items():
+        out.append(dict(provider="GCP", region=_lab(r), kind="rete", sku="Egress Internet (primo scaglione a pagamento)",
+                        unit="EUR/TB", price=round(v * 1000, 3), term="On-demand", source=SVC))
+    for (r, model), v in gpu.items():
+        out.append(dict(provider="GCP", region=_lab(r), kind="gpu", sku=GPU_MODEL[model], unit="EUR/ora",
+                        price=round(v, 4), term="On-demand", source=SVC, note="solo GPU: vCPU e RAM della VM a parte"))
+
+
+def _gcs(key, out):
+    best = {}
+    for s in _skus(key, GCS):
+        c, d = s.get("category", {}), s["description"]
+        regs = set(s.get("serviceRegions", [])) & REGIONS
+        if regs and c.get("usageType") == "OnDemand" and c.get("resourceGroup") == "RegionalStorage" and d.startswith("Standard Storage") \
+                and "Dual" not in d and "Multi" not in d:
+            best[next(iter(regs))] = _tiers(s)[0]
+    for r, v in best.items():
+        if v > 0:
+            out.append(dict(provider="GCP", region=_lab(r), kind="storage", sku="Cloud Storage Standard (object)",
+                            unit="EUR/GB/mese", price=round(v, 5), term="On-demand", source=GCS))
+
 
 def collect():
-    records = []
-    
-    gcp_families = [
-        ("n2-standard-2", 2, 8, 0.097),
-        ("n2-standard-4", 4, 16, 0.194),
-        ("n2-standard-8", 8, 32, 0.388),
-        ("n2-standard-16", 16, 64, 0.776),
-        ("n2-standard-32", 32, 128, 1.552),
-        ("n2-standard-48", 48, 192, 2.328),
-        ("n2-standard-64", 64, 256, 3.104),
-        ("c2-standard-4", 4, 16, 0.214),
-        ("c2-standard-8", 8, 32, 0.428),
-        ("c2-standard-16", 16, 64, 0.856),
-        ("c2-standard-30", 30, 120, 1.605),
-        ("e2-standard-2", 2, 8, 0.067),
-        ("e2-standard-4", 4, 16, 0.134),
-        ("e2-standard-8", 8, 32, 0.268),
-        ("e2-standard-16", 16, 64, 0.536),
-    ]
-
-    for sku, vcpu, ram, od_hourly in gcp_families:
-        if vcpu not in TIERS:
-            continue
-        od_monthly = od_hourly * 730
-        
-        r_od = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly, monthly=od_monthly, source=URL_GCP, note="GCP Compute Engine On-Demand")
-        r_od["term"] = "On-demand"
-        records.append(r_od)
-        
-        r_1y = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly * 0.70, monthly=od_monthly * 0.70, source=URL_GCP, note="GCP 1-Year CUD")
-        r_1y["term"] = "Impegno 1 anno"
-        records.append(r_1y)
-        
-        r_3y = vm("GCP", "europe-west8 (Milan)", sku, vcpu, ram, od_hourly * 0.45, monthly=od_monthly * 0.45, source=URL_GCP, note="GCP 3-Year CUD")
-        r_3y["term"] = "Impegno 3 anni"
-        records.append(r_3y)
-
-    records.extend([
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "storage", "sku": "Persistent Disk Balanced (SSD)", "unit": "EUR/GB/mese", "price": 0.095, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "storage", "sku": "Cloud Storage Standard", "unit": "EUR/GB/mese", "price": 0.023, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "rete", "sku": "Egress Internet Standard", "unit": "EUR/TB", "price": 85.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "rete", "sku": "Partner Interconnect Circuit (1Gbps)", "unit": "EUR/mese", "price": 180.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "gpu", "sku": "NVIDIA L4 GPU attachment", "unit": "EUR/mese", "price": 540.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "licenses", "sku": "Red Hat Enterprise Linux (RHEL)", "unit": "EUR/mese", "price": 45.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "k8s", "sku": "GKE Cluster Control Plane", "unit": "EUR/mese", "price": 73.00, "source": URL_GCP},
-        {"provider": "GCP", "region": "europe-west8 (Milan)", "kind": "dbaas", "sku": "Cloud SQL PostgreSQL", "unit": "EUR/mese", "price": 142.00, "source": URL_GCP},
-    ])
-
-    return records
-
-def extra(): return []
-def cud(): return []
-def gcs(): return []
-def gpu(): return []
+    WARNINGS.clear()
+    key = os.environ.get("GCP_API_KEY")
+    if not key:
+        raise Skip("GCP_API_KEY non impostato: nessun dato GCP (serve una chiave gratuita per la Cloud Billing API)")
+    out = []
+    _compute(key, out)
+    if not any(r["kind"] == "compute" for r in out):
+        raise RuntimeError("GCP: nessun prezzo compute letto dal catalogo")
+    try:
+        _gcs(key, out)
+    except Exception as e:
+        WARNINGS.append(f"Cloud Storage: {sanitize(str(e))[:80]}")
+    return out

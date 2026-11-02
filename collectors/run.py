@@ -34,8 +34,13 @@ SOURCES = (
     ("proxmox", proxmox.collect)
 )
 
+# Collector corretti: i dati salvati prima della correzione (tabelle "stimate") non vanno mai riutilizzati come ripiego.
+CORRECTED = {"aws", "azure", "gcp", "hetzner", "aruba", "seeweb"}
+
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]
+    if name in CORRECTED and old_status.get(name, {}).get("verified_schema") != 1:
+        old = []
     try:
         new = fn()
         # Controllo di soglia rimosso per permettere ai listini statici di caricarsi interamente
@@ -44,20 +49,21 @@ for name, fn in SOURCES:
         for r in new:
             r["src"] = name
         records += new
-        status[name] = dict(ok=True, count=len(new), date=today)
+        status[name] = dict(ok=True, count=len(new), date=today, **({"verified_schema": 1} if name in CORRECTED else {}))
         warns = getattr(sys.modules.get(fn.__module__), "WARNINGS", [])
         if warns:
             status[name]["note"] = "; ".join(dict.fromkeys(warns))[:300]
     except Skip as e:
         records += old
-        status[name] = dict(ok=True, count=len(old), note=str(e), date=today)
+        status[name] = dict(ok=True, count=len(old), note=str(e), date=today, **({"verified_schema": 1} if name in CORRECTED else {}))
     except Exception as e:
         print(f"ERRORE CRITICO NEL COLLECTOR '{name}': {e}")
         traceback.print_exc()
         for r in old:
             r["stale"] = True
         records += old
-        status[name] = dict(ok=False, error=str(e)[:200], count=len(old), date=old_status.get(name, {}).get("date"))
+        status[name] = dict(ok=False, error=str(e)[:200], count=len(old), date=old_status.get(name, {}).get("date"),
+                            **({"verified_schema": old_status.get(name, {}).get("verified_schema")} if name in CORRECTED else {}))
 
 todo, manual = [], 0
 for f in sorted((ROOT / "manual").glob("*.yml")):
