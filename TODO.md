@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-02.
+Ultimo aggiornamento: 2026-11-02 (passo 2).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -10,17 +10,21 @@ Ultimo aggiornamento: 2026-11-02.
   - Eliminato il ripiego silenzioso `0,019 x vCPU` di Seeweb, che produceva prezzi inventati senza segnalarlo.
   - Nuovo `check_page()` in `common.py`: a ogni run controlla che la pagina ufficiale riporti ancora i prezzi della tabella; se no, lascia un avviso in `docs/data/status.json` (campo `note`). **Mai provato su rete reale: guardare il primo run.**
   - Rimossi i vecchi sconti a percentuale su Aruba (-20% e -35%): i prezzi annuali sono ora quelli ufficiali. Il 3 anni non esiste nel listino pubblico.
+- [x] **Passo 2: AWS, Azure, GCP e Hetzner senza prezzi stimati né sconti inventati.**
+  - `aws.py`: legge la Price List ufficiale (on-demand, Reserved Standard senza anticipo 1 e 3 anni, GPU per GPU, EBS gp3, S3, traffico) in 3 regioni (Milano, Francoforte, Irlanda).
+  - `azure_cloud.py`: Retail Prices API (on-demand, Reservation 1 e 3 anni, Blob, traffico, GPU) a Milano e nei Paesi Bassi. La RAM è quella della famiglia (D v5 = 4, E v5 = 8, F v2 = 2 GB/vCPU).
+  - `gcp.py`: Cloud Billing Catalog API (N2 on-demand e Committed Use 1/3 anni, disco, Cloud Storage, GPU, traffico). **Serve il secret `GCP_API_KEY`**: senza, GCP resta vuoto, con una nota in `status.json`.
+  - `hetzner.py`: API ufficiale con `HCLOUD_TOKEN`. Senza token si saltano le chiamate e restano i prezzi verificati di `manual/hetzner.yml`.
+  - `run.py`: i dati salvati prima della correzione non vengono più usati come ripiego (`verified_schema` in `status.json`).
+  - Cancellato `manual/gcp.yml` (valori senza riscontro). Cancellate le categorie k8s, dbaas, colocation e licenze di questi 4 provider (valori inventati, elenco sotto).
+  - **Mai provato su rete reale.** Da controllare al primo run: righe `aws`, `azure`, `gcp`, `hetzner` in `docs/data/status.json` (campo `note` per gli avvisi parziali) e che in `latest.json` ci siano record compute per ogni provider.
 
 ## Da fare, in ordine
-- [ ] **Passo 2: prezzi "stimati" e sconti inventati** (AWS, Azure, GCP, Hetzner)
-  - `aws.py`, `azure_cloud.py`, `gcp.py`: tabelle fisse, nei commenti AWS "stimato"; impegno 1 e 3 anni ottenuto con percentuali fisse (AWS 30/50%, Azure 28/48%, GCP 30/55%).
-  - Obiettivo: tornare a leggere i prezzi reali dalle fonti (AWS Price List, Azure Retail Prices) e per GCP decidere tra Cloud Billing API (serve chiave) e valori verificati a mano.
-  - Hetzner: la chiamata all'API prezzi è senza token (con ogni probabilità 401, errore ignorato), il riconoscimento delle taglie cerca nomi vecchi (`11`, `21`...), lo sconto 10% a 1 anno non esiste.
-- [ ] **Passo 3: altri provider con tabelle fisse non verificate**: Oracle, Proxmox, DigitalOcean, Exoscale, Enter, STACKIT e i file `manual/` (gcp, ionos, scaleway, hetzner, ovh...). Per ognuno: fonte ufficiale, data di verifica, niente voci senza riscontro.
+- [ ] **Passo 3: altri provider con tabelle fisse non verificate**: Oracle, Proxmox, DigitalOcean, Exoscale, Enter, STACKIT e i file `manual/` (ionos, scaleway, hetzner, ovh...). Per ognuno: fonte ufficiale, data di verifica, niente voci senza riscontro.
 - [ ] **Passo 4: `run.py`, workflow e sicurezza**
   - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
   - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
-  - Togliere dal workflow i secret non più usati (`GCP_API_KEY`, `HCLOUD_TOKEN`).
+  - I secret `GCP_API_KEY` e `HCLOUD_TOKEN` tornano in uso (passo 2): tenerli. Creare una chiave Google nuova, limitata alla sola Cloud Billing API.
   - **Revocare la chiave API Google** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).
   - Cancellare `update.yml` nella radice (duplicato di `.github/workflows/update.yml`).
 - [ ] **Passo 5: `docs/index.html`**
@@ -48,3 +52,10 @@ Ultimo aggiornamento: 2026-11-02.
 - Cloud Shared "stimati": 13,87; 27,74; 55,48; 110,96; 221,92 EUR/mese (ufficiali, per esempio 4 vCPU/8 GB: 45,99).
 
 **Ancora da raccogliere per Aruba e Seeweb**: Aruba Cloud VPS, object storage, colocation, Kubernetes, DBaaS, licenze; Seeweb Cloud Server non condiviso, Object Storage, Kubernetes, housing, e verifica se i prezzi sono IVA esclusa.
+
+## Voci rimosse al passo 2 (non verificabili: restano qui per traccia)
+**AWS** (tabella fissa "stimata", eu-south-1): m6i/c6i/r6i/m7i con prezzo orario fisso (per esempio m6i.large 0,1016 EUR/h); impegno 1 anno -30%, 3 anni -50%; EBS gp3 0,088 e S3 0,023 EUR/GB/mese; egress 90 EUR/TB; Direct Connect 1 Gbps 220 EUR/mese; g5.2xlarge 950 EUR/mese; Windows Server 23 EUR/vCPU/mese; EKS 73 EUR/mese; RDS PostgreSQL db.m6i.large 145 EUR/mese.
+**Azure** (italynorth): D/E/F con prezzo orario fisso (per esempio D2s_v5 0,096 EUR/h); impegno -28% e -48%; Premium SSD 0,12 e Blob 0,021 EUR/GB/mese; egress 87 EUR/TB; ExpressRoute 1 Gbps 210 EUR/mese; "NCas_v4 (1x AMD MI200)" 920 EUR/mese; Windows Hybrid Benefit 18; AKS 0; Azure Database for PostgreSQL 140 EUR/mese.
+**GCP** (europe-west8): N2/C2/E2 con prezzo orario fisso (per esempio n2-standard-2 0,097 EUR/h); impegno -30% e -55%; PD Balanced 0,095 e Cloud Storage 0,023 EUR/GB/mese; egress 85 EUR/TB; Partner Interconnect 180; GPU L4 540 EUR/mese; RHEL 45; GKE 73; Cloud SQL PostgreSQL 142. `manual/gcp.yml`: n2-standard-2/4/8/16 a 75,40; 150,80; 301,60; 603,20 EUR/mese (europe-west3), PD Balanced 0,10.
+**Hetzner**: server dedicati AX41 44, AX51 53, AX101 79, AX161 109, EX44 54, EX101 89 EUR/mese con impegno 1 anno -10%; server GPU 239 e 450 EUR/mese; Storage Box BX11 3,81 e BX21 12,97, Storage Share 5,10; volume 0,047 EUR/GB/mese; colocation 1U 39 e rack 520; extra traffico 1,19 EUR/TB; Windows Server 25; Kubernetes 0.
+**Da raccogliere con fonti ufficiali** per questi provider: Kubernetes gestito, database gestiti, licenze, colocation e collegamenti dedicati (Direct Connect, ExpressRoute, Interconnect).
