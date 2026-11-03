@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-02 (passo 2).
+Ultimo aggiornamento: 2026-11-02 (passo 3, blocco A).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -19,13 +19,20 @@ Ultimo aggiornamento: 2026-11-02 (passo 2).
   - Cancellato `manual/gcp.yml` (valori senza riscontro). Cancellate le categorie k8s, dbaas, colocation e licenze di questi 4 provider (valori inventati, elenco sotto).
   - **Mai provato su rete reale.** Da controllare al primo run: righe `aws`, `azure`, `gcp`, `hetzner` in `docs/data/status.json` (campo `note` per gli avvisi parziali) e che in `latest.json` ci siano record compute per ogni provider.
 
+- [x] **Passo 3A: hyperscaler e cloud globali.**
+  - `oracle.py`: Price List API pubblica di Oracle (anonima, in EUR): E4 ed E5 Flex (1 OCPU = 2 vCPU), Block Volume, Object Storage, traffico in uscita, GPU. Le voci non trovate nel listino non si inventano: finiscono nelle note di `status.json`.
+  - `digitalocean.py`: 8 Droplet dal listino ufficiale (USD convertiti in EUR col cambio del giorno) con controllo online `check_page()`. Vecchi prezzi errati: Basic 2 vCPU/4 GB era 20 USD, ora 24.
+  - `vultr.py` e `linode.py`: già leggevano le API ufficiali; tolta la voce inventata "traffico extra 10 EUR/TB".
+  - `aws.py`: GPU con una voce per istanza ("g5.12xlarge (4x NVIDIA A10G 24GB)", prezzo per GPU nel campo prezzo), famiglie p5en/p5e/p5/p4d/p4de/p3/g6e/g6/g5/g5g/g4dn, più la regione eu-north-1 (Stoccolma). `azure_cloud.py`: stesso schema per le VM GPU.
+  - **Mai provato su rete reale.** Da controllare al primo run: righe `oracle`, `digitalocean`, `vultr`, `linode` in `docs/data/status.json` e che in `latest.json` ci siano record compute per ciascuno; il formato dell'API Oracle è il punto meno sicuro.
+
 ## Da fare, in ordine
-- [ ] **Passo 3: altri provider con tabelle fisse non verificate**: Oracle, Proxmox, DigitalOcean, Exoscale, Enter, STACKIT e i file `manual/` (ionos, scaleway, hetzner, ovh...). Per ognuno: fonte ufficiale, data di verifica, niente voci senza riscontro.
+- [ ] **Passo 3B: provider locali** (europei, italiani, virtualizzazione)
+  - STACKIT, Exoscale, Enter, Proxmox/VMware/Nutanix (`manual/onprem.yml`), IONOS, Scaleway, OVHcloud, Hetzner (`manual/hetzner.yml`), Fastweb, Noovle, `manual/gpuaas.yml`.
+  - Per ognuno: fonte ufficiale, data di verifica, niente voci senza riscontro. Su OVHcloud tolta la voce inventata "traffico extra 10 EUR/TB".
 - [ ] **Passo 4: `run.py`, workflow e sicurezza**
   - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
   - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
-  - I secret `GCP_API_KEY` e `HCLOUD_TOKEN` tornano in uso (passo 2): tenerli. Creare una chiave Google nuova, limitata alla sola Cloud Billing API.
-  - **Revocare la chiave API Google** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).
   - Cancellare `update.yml` nella radice (duplicato di `.github/workflows/update.yml`).
 - [ ] **Passo 5: `docs/index.html`**
   - Togliere i 4 record di prova con prezzi inventati.
@@ -37,6 +44,11 @@ Ultimo aggiornamento: 2026-11-02 (passo 2).
 - [ ] **Passo 6: Docker e Cloud Run**
   - I dati sono nell'immagine: serve un trigger Cloud Build a ogni push su `main`, altrimenti gli aggiornamenti giornalieri non arrivano.
   - nginx: `Cache-Control: no-cache` su `/data/` e `sw.js`, gzip, intestazioni di sicurezza, immagine `nginx-unprivileged`.
+- [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner** (rimandate su richiesta)
+  - Oggi GCP è vuoto e Hetzner usa solo i 6 prezzi manuali.
+  - GCP: creare una chiave API nuova, limitata alla sola Cloud Billing API, e salvarla come secret `GCP_API_KEY`. **Revocare la vecchia chiave** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).
+  - Hetzner: token di sola lettura come secret `HCLOUD_TOKEN` (facoltativo; poi eliminare `manual/hetzner.yml` per non avere doppioni).
+  - Dopo il primo run controllare `status.json` e le SKU GCP.
 
 ## Voci rimosse al passo 1 (non verificabili: restano qui per traccia)
 **Aruba** (valori che erano nel collector):
@@ -59,3 +71,9 @@ Ultimo aggiornamento: 2026-11-02 (passo 2).
 **GCP** (europe-west8): N2/C2/E2 con prezzo orario fisso (per esempio n2-standard-2 0,097 EUR/h); impegno -30% e -55%; PD Balanced 0,095 e Cloud Storage 0,023 EUR/GB/mese; egress 85 EUR/TB; Partner Interconnect 180; GPU L4 540 EUR/mese; RHEL 45; GKE 73; Cloud SQL PostgreSQL 142. `manual/gcp.yml`: n2-standard-2/4/8/16 a 75,40; 150,80; 301,60; 603,20 EUR/mese (europe-west3), PD Balanced 0,10.
 **Hetzner**: server dedicati AX41 44, AX51 53, AX101 79, AX161 109, EX44 54, EX101 89 EUR/mese con impegno 1 anno -10%; server GPU 239 e 450 EUR/mese; Storage Box BX11 3,81 e BX21 12,97, Storage Share 5,10; volume 0,047 EUR/GB/mese; colocation 1U 39 e rack 520; extra traffico 1,19 EUR/TB; Windows Server 25; Kubernetes 0.
 **Da raccogliere con fonti ufficiali** per questi provider: Kubernetes gestito, database gestiti, licenze, colocation e collegamenti dedicati (Direct Connect, ExpressRoute, Interconnect).
+
+## Voci rimosse al passo 3A (non verificabili: restano qui per traccia)
+**Oracle** (tabella fissa, eu-milan-1): VM.Standard.E4.Flex 2/8 0,054 EUR/h (39,42/mese), 4/16 78,84, 8/32 157,68, 16/64 315,36; Block Volume Performance Balanced 0,025 e Object Storage 0,023 EUR/GB/mese; egress 8,50 EUR/TB; OKE Basic 0; OCI Database with PostgreSQL (2 vCPU/8 GB) 68 EUR/mese.
+**DigitalOcean** (tabella fissa, Francoforte/Amsterdam): Basic 1/1 4, 1/2 10, 2/4 20, 4/8 40, 8/16 80 EUR/mese; DOKS 0; PostgreSQL gestito 2 vCPU/8 GB 110; Spaces 5 EUR/mese (250 GB + 1 TB di traffico).
+**Vultr e Akamai Linode**: "traffico extra (oltre bundle)" 10 USD/TB convertito in EUR, senza riscontro.
+**Da raccogliere con fonti ufficiali**: DigitalOcean 16 vCPU, altre taglie CPU/Memory-Optimized, GPU Droplet, Volumes, Spaces, traffico, Kubernetes, database; Oracle Kubernetes, database, GPU verificate sul listino, impegno (Universal Credits).
