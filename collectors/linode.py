@@ -28,19 +28,9 @@ def collect():
             t["memory"] / 1024,
             hourly, 
             monthly=monthly, 
-            source=URL,
+            source=URL, term="On-demand",
             note="include disco e traffico" + (", core dedicati" if t["class"] == "dedicated" else "")
         ))
-    
-    out.append({
-        "provider": "Akamai Linode",
-        "region": "globale",
-        "kind": "rete",
-        "sku": "Traffico extra (oltre bundle)",
-        "unit": "EUR/TB",
-        "price": round(10.0 * fx, 3),
-        "source": URL
-    })
     return out
 
 if __name__ == "__main__":

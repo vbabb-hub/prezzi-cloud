@@ -35,7 +35,7 @@ SOURCES = (
 )
 
 # Collector corretti: i dati salvati prima della correzione (tabelle "stimate") non vanno mai riutilizzati come ripiego.
-CORRECTED = {"aws", "azure", "gcp", "hetzner", "aruba", "seeweb"}
+CORRECTED = {"aws", "azure", "gcp", "hetzner", "aruba", "seeweb", "oracle", "digitalocean"}
 
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]

@@ -85,9 +85,10 @@ def _gpu(out):
             n, model = GPU_SKUS[i["armSkuName"]]
             k = (region, i["armSkuName"])
             if k not in best or i["retailPrice"] / n < best[k]["price"]:
-                best[k] = dict(provider="Azure", region=f"{region} ({GPU_REGIONS[region]})", kind="gpu", sku=model, unit="EUR/ora",
+                nm = i["armSkuName"].replace("Standard_", "")
+                best[k] = dict(provider="Azure", region=f"{region} ({GPU_REGIONS[region]})", kind="gpu", sku=f"{nm} ({n}x {model})", unit="EUR/ora",
                                price=round(i["retailPrice"] / n, 4), term="On-demand", source=URL,
-                               note=f"{i['armSkuName'].replace('Standard_', '')}: {n} GPU, include vCPU e RAM")
+                               note=f"prezzo per GPU; istanza intera {i['retailPrice']:.2f} EUR/ora, include vCPU e RAM")
     out.extend(best.values())
 
 
