@@ -12,17 +12,6 @@ _EXTRA = []
 def collect():
     out = []
     _EXTRA.clear()
-    
-    # Aggiunta categoria Rete
-    _EXTRA.append(dict(
-        provider="OVHcloud",
-        region="catalogo IT",
-        kind="rete",
-        sku="Traffico extra / Egress Internet",
-        unit="EUR/TB",
-        price=10.00,
-        source=URL
-    ))
 
     for a in get(URL).json().get("addons", []):
         plan = a.get("planCode", "")
@@ -68,10 +57,10 @@ def collect():
             if "consumption" in (p.get("capacities") or []) and p.get("price"):
                 hr = p["price"] / 1e8
                 if 0.001 < hr < 5:
-                    out.append(vm("OVHcloud", "catalogo IT", plan.replace(".consumption", ""), vcpu, ram, hr, source=URL))
+                    out.append(vm("OVHcloud", "catalogo IT", plan.replace(".consumption", ""), vcpu, ram, hr, source=URL, term="On-demand"))
                 break
-    return out
+    return out + extra()   # storage e GPU del catalogo vengono da _EXTRA: prima non venivano mai inclusi
 
 
 def extra():
-    return list(_EXTRA)
+    return [dict(e, term="On-demand") for e in _EXTRA]
