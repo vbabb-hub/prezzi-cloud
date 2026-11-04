@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-02 (passo 3, blocco A).
+Ultimo aggiornamento: 2026-11-03 (passo 3, blocco B).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -26,10 +26,23 @@ Ultimo aggiornamento: 2026-11-02 (passo 3, blocco A).
   - `aws.py`: GPU con una voce per istanza ("g5.12xlarge (4x NVIDIA A10G 24GB)", prezzo per GPU nel campo prezzo), famiglie p5en/p5e/p5/p4d/p4de/p3/g6e/g6/g5/g5g/g4dn, più la regione eu-north-1 (Stoccolma). `azure_cloud.py`: stesso schema per le VM GPU.
   - **Mai provato su rete reale.** Da controllare al primo run: righe `oracle`, `digitalocean`, `vultr`, `linode` in `docs/data/status.json` e che in `latest.json` ci siano record compute per ciascuno; il formato dell'API Oracle è il punto meno sicuro.
 
+- [x] **Passo 3B: provider locali.**
+  - `stackit.py`: listino ufficiale STACKIT (EU01, singola zona): 7 famiglie di VM (28 voci), storage, 10 tipi di server GPU con modelli confermati dalla pagina ufficiale (n1 = A100 80GB, n2 = L40S, n3 = H100 NVL; n3.104d.g8 = 8x HGX H100). Controllo online `check_page()` sui prezzi GPU. Eliminato `manual/stackit.yml` (valori già presenti nel collector).
+  - `exoscale.py`: 4 istanze Standard, storage a blocchi, Object Storage (0,0184 EUR/GB da pagina ufficiale) e traffico (20 EUR/TB). Istanze e block storage da fonti secondarie coerenti tra loro: segnalato nelle note.
+  - `ovh.py`: **corretto un errore**: i dati del catalogo OVH su storage, object storage e GPU (lista `_EXTRA`) non venivano mai inclusi perché `run.py` chiamava solo `collect()`; ora sono inclusi. Tolta la voce inventata "traffico extra 10 EUR/TB".
+  - `entersuite.py` e `proxmox.py`: tabelle fisse non verificate disattivate (sostituite da uno stub); le licenze Proxmox e VMware stanno in `manual/onprem.yml` (Proxmox Community 120 EUR ufficiale; le altre fasce da fonti secondarie; VMware in USD, stima non ufficiale).
+  - Già a posto, non toccati: `manual/ionos.yml` (listino ufficiale EUR), `manual/scaleway.yml` (pagine ufficiali), `manual/hetzner.yml` (tabella ufficiale 15/06/2026), `manual/fastweb.yml` e `manual/noovle.yml` (solo segnaposto: nessun listino pubblico).
+  - **Mai provato su rete reale.** Da controllare al primo run: righe `stackit`, `exoscale`, `ovh` in `docs/data/status.json`; in `latest.json` ora devono comparire GPU e storage OVHcloud.
+
 ## Da fare, in ordine
-- [ ] **Passo 3B: provider locali** (europei, italiani, virtualizzazione)
-  - STACKIT, Exoscale, Enter, Proxmox/VMware/Nutanix (`manual/onprem.yml`), IONOS, Scaleway, OVHcloud, Hetzner (`manual/hetzner.yml`), Fastweb, Noovle, `manual/gpuaas.yml`.
-  - Per ognuno: fonte ufficiale, data di verifica, niente voci senza riscontro. Su OVHcloud tolta la voce inventata "traffico extra 10 EUR/TB".
+- [ ] **Punti aperti emersi dal passo 3** (da decidere)
+  - **Aruba: esistono due listini.** Quello pubblico (cloud.it) usato oggi, e il "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026, enterprise.aruba.it), che per gare e PA ha prezzi diversi: per esempio VPS O2A4 41,70 EUR/mese (0,05712 EUR/h), 37,53 con impegno 1 anno, contro 20,10 del listino pubblico. Valutare di aggiungere il listino Enterprise come variante.
+  - Polo Strategico Nazionale (listino pubblico, per le gare PA): da valutare come provider.
+  - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
+  - Enter: nessun listino pubblico trovato, da richiedere.
+  - Proxmox: verificare Standard e Premium sul sito ufficiale (valori usati 550 e 1.100 da fonti secondarie; il vecchio collector aveva 1.020 e 2.040).
+  - VMware: nessun listino pubblico Broadcom, i valori restano indicativi. Nutanix: nessun prezzo.
+  - IONOS: server con core dedicati e Savings Plan, object storage, traffico. Scaleway: storage e traffico. Hetzner: object storage.
 - [ ] **Passo 4: `run.py`, workflow e sicurezza**
   - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
   - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
@@ -77,3 +90,8 @@ Ultimo aggiornamento: 2026-11-02 (passo 3, blocco A).
 **DigitalOcean** (tabella fissa, Francoforte/Amsterdam): Basic 1/1 4, 1/2 10, 2/4 20, 4/8 40, 8/16 80 EUR/mese; DOKS 0; PostgreSQL gestito 2 vCPU/8 GB 110; Spaces 5 EUR/mese (250 GB + 1 TB di traffico).
 **Vultr e Akamai Linode**: "traffico extra (oltre bundle)" 10 USD/TB convertito in EUR, senza riscontro.
 **Da raccogliere con fonti ufficiali**: DigitalOcean 16 vCPU, altre taglie CPU/Memory-Optimized, GPU Droplet, Volumes, Spaces, traffico, Kubernetes, database; Oracle Kubernetes, database, GPU verificate sul listino, impegno (Universal Credits).
+
+## Voci rimosse al passo 3B (non verificabili: restano qui per traccia)
+**Exoscale** (tabella fissa, Francoforte/Zurigo): Standard Medium 2/4 0,024 EUR/h (17,50/mese), Large 4/8 35,00, Extra-Large 8/16 70,00, Huge 16/32 140,00; Object Storage 0,011 EUR/GB/mese (valori diversi da quelli trovati: Medium 0,04666 EUR/h, Large 0,09333, Extra-large 0,18667, Huge 0,37334).
+**Enter Cloud Suite**: OpenStack Standard 2/8 0,045 EUR/h (32,85/mese), 4/16 65,70, 8/32 131,40, 16/64 262,80; Block Storage SSD 0,08 EUR/GB/mese.
+**Proxmox/VMware** (vecchio collector con ripiego): Community 120, Basic 370, Standard 1.020, Premium 2.040 EUR/socket/anno; PBS Basic; VMware VVF 190, VCF 350 e vDefend 200 "EUR"/core/anno (sono dollari, secondo le fonti).
