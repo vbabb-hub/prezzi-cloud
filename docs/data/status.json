@@ -1,20 +1,21 @@
 {
  "azure": {
   "ok": true,
-  "count": 482,
-  "date": "2026-11-03",
-  "verified_schema": 1
+  "count": 353,
+  "date": "2026-11-04",
+  "verified_schema": 1,
+  "note": "compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re; storage_network: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
  },
  "aws": {
   "ok": true,
   "count": 299,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1
  },
  "ovh": {
   "ok": true,
   "count": 8,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "gcp": {
   "ok": false,
@@ -27,68 +28,68 @@
   "ok": true,
   "count": 0,
   "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali di manual/hetzner.yml",
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1
  },
  "oracle": {
   "ok": true,
   "count": 28,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1,
   "note": "Block Volume: voce non trovata nel listino; Object Storage Standard: voce non trovata nel listino"
  },
  "vultr": {
   "ok": true,
   "count": 42,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "linode": {
   "ok": true,
   "count": 17,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "aruba": {
   "ok": true,
   "count": 22,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1
  },
  "seeweb": {
   "ok": true,
   "count": 30,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1
  },
  "stackit": {
   "ok": true,
   "count": 11,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "digitalocean": {
   "ok": true,
   "count": 8,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "verified_schema": 1
  },
  "exoscale": {
   "ok": true,
   "count": 5,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "entersuite": {
   "ok": true,
   "count": 5,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "proxmox": {
   "ok": true,
   "count": 8,
-  "date": "2026-11-03"
+  "date": "2026-11-04"
  },
  "manual": {
   "ok": true,
   "count": 50,
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "da_compilare": 14
  }
 }
