@@ -1,10 +1,10 @@
 {
  "azure": {
   "ok": true,
-  "count": 353,
+  "count": 110,
   "date": "2026-11-04",
   "verified_schema": 1,
-  "note": "compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re; storage_network: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
+  "note": "compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re; compute westeurope: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re"
  },
  "aws": {
   "ok": true,
@@ -14,7 +14,7 @@
  },
  "ovh": {
   "ok": true,
-  "count": 8,
+  "count": 84,
   "date": "2026-11-04"
  },
  "gcp": {
@@ -62,8 +62,9 @@
  },
  "stackit": {
   "ok": true,
-  "count": 11,
-  "date": "2026-11-04"
+  "count": 43,
+  "date": "2026-11-04",
+  "verified_schema": 1
  },
  "digitalocean": {
   "ok": true,
@@ -73,22 +74,27 @@
  },
  "exoscale": {
   "ok": true,
-  "count": 5,
-  "date": "2026-11-04"
+  "count": 7,
+  "date": "2026-11-04",
+  "verified_schema": 1
  },
  "entersuite": {
   "ok": true,
-  "count": 5,
-  "date": "2026-11-04"
+  "count": 0,
+  "note": "tabella non verificata, rimossa (vedi TODO.md)",
+  "date": "2026-11-04",
+  "verified_schema": 1
  },
  "proxmox": {
   "ok": true,
-  "count": 8,
-  "date": "2026-11-04"
+  "count": 0,
+  "note": "licenze Proxmox e VMware ora in manual/onprem.yml (prezzi verificati)",
+  "date": "2026-11-04",
+  "verified_schema": 1
  },
  "manual": {
   "ok": true,
-  "count": 50,
+  "count": 46,
   "date": "2026-11-04",
   "da_compilare": 14
  }
