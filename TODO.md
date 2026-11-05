@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-03 (passo 3, blocco B).
+Ultimo aggiornamento: 2026-11-04 (passo 3C).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -34,15 +34,23 @@ Ultimo aggiornamento: 2026-11-03 (passo 3, blocco B).
   - Già a posto, non toccati: `manual/ionos.yml` (listino ufficiale EUR), `manual/scaleway.yml` (pagine ufficiali), `manual/hetzner.yml` (tabella ufficiale 15/06/2026), `manual/fastweb.yml` e `manual/noovle.yml` (solo segnaposto: nessun listino pubblico).
   - **Mai provato su rete reale.** Da controllare al primo run: righe `stackit`, `exoscale`, `ovh` in `docs/data/status.json`; in `latest.json` ora devono comparire GPU e storage OVHcloud.
 
+- [x] **Passo 3C: Aruba Enterprise e Polo Strategico Nazionale.**
+  - `aruba_enterprise.py`: provider **"Aruba Cloud Enterprise"** dal "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026): Cloud Server PRO (12 taglie, on-demand e 1 anno), Cloud VPS, Virtual Data Center, Kubernetes gestito, DBaaS, server con GPU (on-demand, 1 e 3 anni), storage, rete, licenze. Ogni voce riporta versione del listino e qualifica ACN. Provider separato dal pubblico "Aruba Cloud" (`aruba.py`, note ora con "Listino pubblico cloud.it"). Confronto in `ARUBA_LISTINI.md`.
+  - `psn.py`: **"Polo Strategico Nazionale"**, listino Industry Standard dal 30/04/2026 (canone annuale): IaaS Shared VM e Pool, con e senza HA, e risorse aggiuntive. Compaiono come "Impegno 1 anno" (canone annuale).
+  - **Correzione**: nel messaggio del passo 3B avevo scritto che il listino Enterprise dava "VPS O2A4 a 41,70 EUR/mese": era una lettura sbagliata del risultato di ricerca. 41,70 è il Cloud Server PRO **O4A8** (0,05712 EUR/h); il VPS O2A4 costa 9,21 EUR/mese. I confronti corretti sono in `ARUBA_LISTINI.md`.
+  - **Mai provato su rete reale.** Da controllare al primo run: righe `aruba-enterprise` e `psn` in `docs/data/status.json` (per Aruba Enterprise l'avviso `note` dice se i prezzi non sono più sulla pagina).
+
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
-  - **Aruba: esistono due listini.** Quello pubblico (cloud.it) usato oggi, e il "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026, enterprise.aruba.it), che per gare e PA ha prezzi diversi: per esempio VPS O2A4 41,70 EUR/mese (0,05712 EUR/h), 37,53 con impegno 1 anno, contro 20,10 del listino pubblico. Valutare di aggiungere il listino Enterprise come variante.
-  - Polo Strategico Nazionale (listino pubblico, per le gare PA): da valutare come provider.
   - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
   - Enter: nessun listino pubblico trovato, da richiedere.
   - Proxmox: verificare Standard e Premium sul sito ufficiale (valori usati 550 e 1.100 da fonti secondarie; il vecchio collector aveva 1.020 e 2.040).
   - VMware: nessun listino pubblico Broadcom, i valori restano indicativi. Nutanix: nessun prezzo.
   - IONOS: server con core dedicati e Savings Plan, object storage, traffico. Scaleway: storage e traffico. Hetzner: object storage.
+- [ ] **Passo 3C bis: completamenti PSN e Aruba Enterprise** (da decidere)
+  - PSN: mappatura delle colonne di prezzo del PDF ricavata dal testo estratto; **5 voci dipendono solo dalla posizione**: IaaS Shared VM Large e VM X-Large, Pool Small, e IaaS Shared (HA) VM Medium e VM X-Large. Verificarle sul PDF. Non incluse: VM Tiny, storage a blocchi/object, GPU H100, Kubernetes (CaaS), database, sicurezza e backup, Secure Public Cloud (Oracle, Azure, Google).
+  - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
+  - Il listino PSN ha molte versioni (2024, 2025, gennaio, aprile 2026): riverificare a ogni nuova release.
 - [ ] **Passo 4: `run.py`, workflow e sicurezza**
   - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
   - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
