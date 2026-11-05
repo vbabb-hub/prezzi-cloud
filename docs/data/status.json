@@ -53,6 +53,19 @@
   "date": "2026-11-05",
   "verified_schema": 1
  },
+ "aruba-enterprise": {
+  "ok": true,
+  "count": 113,
+  "date": "2026-11-05",
+  "verified_schema": 1,
+  "note": "verifica online non riuscita (404 Client Error: Not Found for url: https://enterprise.aruba.it/documents/tc-fi)"
+ },
+ "psn": {
+  "ok": true,
+  "count": 20,
+  "date": "2026-11-05",
+  "verified_schema": 1
+ },
  "seeweb": {
   "ok": true,
   "count": 30,
