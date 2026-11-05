@@ -1,7 +1,7 @@
 import json, pathlib, sys, datetime as dt, traceback
 import yaml
 import aws, ovh, hetzner, gcp, linode, vultr, oracle, aruba, seeweb, stackit, proxmox, digitalocean, exoscale, entersuite
-import azure_cloud as azure_coll
+import aruba_enterprise, psn, azure_cloud as azure_coll
 from common import Skip
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -26,6 +26,8 @@ SOURCES = (
     ("vultr", vultr.collect),
     ("linode", linode.collect),
     ("aruba", aruba.collect),
+    ("aruba-enterprise", aruba_enterprise.collect),
+    ("psn", psn.collect),
     ("seeweb", seeweb.collect),
     ("stackit", stackit.collect),
     ("digitalocean", digitalocean.collect),
@@ -35,7 +37,7 @@ SOURCES = (
 )
 
 # Collector corretti: i dati salvati prima della correzione (tabelle "stimate") non vanno mai riutilizzati come ripiego.
-CORRECTED = {"aws", "azure", "gcp", "hetzner", "aruba", "seeweb", "oracle", "digitalocean", "stackit", "exoscale", "entersuite", "proxmox"}
+CORRECTED = {"aws", "azure", "gcp", "hetzner", "aruba", "seeweb", "oracle", "digitalocean", "stackit", "exoscale", "entersuite", "proxmox", "aruba-enterprise", "psn"}
 
 for name, fn in SOURCES:
     old = [r for r in prev if r.get("src") == name]

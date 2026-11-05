@@ -30,7 +30,7 @@ def collect():
     WARNINGS.clear()
     records = []
     for code, v, ram, nvme, hourly, monthly, yearly in SERVERS:
-        note = f"incl. {nvme} GB NVMe e traffico illimitato, escluso IP; verificato {VERIFIED}"
+        note = f"Listino pubblico cloud.it (non Enterprise); incl. {nvme} GB NVMe e traffico illimitato, escluso IP; verificato {VERIFIED}"
         records.append(vm("Aruba Cloud", REGION, f"OpenStack {code}", v, ram, hourly, monthly=monthly, source=URL_SERVER,
                           term="On-demand", note=note))
         records.append(vm("Aruba Cloud", REGION, f"OpenStack {code}", v, ram, yearly / 12 / 730, monthly=round(yearly / 12, 2),
@@ -38,12 +38,12 @@ def collect():
     for sku, monthly in GPUS:
         records.append(dict(provider="Aruba Cloud", region=REGION, kind="gpu", sku=sku, unit="EUR/ora", price=round(monthly / 730, 4),
                             term="On-demand", source=URL_GPU,
-                            note=f"GPU on Demand: server dedicato con 1 GPU, canone {monthly:.2f} EUR/mese su 730 h; verificato {VERIFIED}"))
+                            note=f"Listino pubblico cloud.it; GPU on Demand: server dedicato con 1 GPU, canone {monthly:.2f} EUR/mese su 730 h; verificato {VERIFIED}"))
     for sku, price in BLOCK:
         records.append(dict(provider="Aruba Cloud", region=REGION, kind="storage", sku=sku, unit="EUR/GB/mese", price=price,
-                            term="On-demand", source=URL_BLOCK if "Block" in sku else URL_SERVER, note=f"verificato {VERIFIED}"))
+                            term="On-demand", source=URL_BLOCK if "Block" in sku else URL_SERVER, note=f"Listino pubblico cloud.it; verificato {VERIFIED}"))
     records.append(dict(provider="Aruba Cloud", region=REGION, kind="rete", sku="Traffico in uscita (illimitato nei Cloud Server)",
-                        unit="EUR/TB", price=0.0, term="On-demand", source=URL_SERVER, note=f"incluso nel prezzo del server; verificato {VERIFIED}"))
+                        unit="EUR/TB", price=0.0, term="On-demand", source=URL_SERVER, note=f"Listino pubblico cloud.it; incluso nel prezzo del server; verificato {VERIFIED}"))
     for url, vals in ((URL_SERVER, [s[5] for s in SERVERS]), (URL_GPU, [GPUS[1][1]])):
         w = check_page(url, vals)
         if w:
