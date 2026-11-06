@@ -6,7 +6,7 @@ from common import vm, check_page
 
 URL = "https://enterprise.aruba.it/documents/tc-files/it/arb-11740-1_cloud_listino.aspx"
 VERSION, VALID_FROM, VERIFIED = "ARB-11740-1", "03/08/2026", "2026-11-04"
-PROVIDER, REGION = "Aruba Cloud Enterprise", "Italia"
+PROVIDER, REGION = "Aruba Cloud Enterprise", "IT"
 WARNINGS = []
 
 # (codice, vCPU, RAM GB, NVMe GB, EUR/ora, EUR/mese on-demand, EUR/mese impegno 1 anno)
