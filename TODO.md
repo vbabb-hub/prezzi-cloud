@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-04 (passo 3C).
+Ultimo aggiornamento: 2026-11-05 (passo 3C, PSN completato per quanto verificabile).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -36,7 +36,8 @@ Ultimo aggiornamento: 2026-11-04 (passo 3C).
 
 - [x] **Passo 3C: Aruba Enterprise e Polo Strategico Nazionale.**
   - `aruba_enterprise.py`: provider **"Aruba Cloud Enterprise"** dal "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026): Cloud Server PRO (12 taglie, on-demand e 1 anno), Cloud VPS, Virtual Data Center, Kubernetes gestito, DBaaS, server con GPU (on-demand, 1 e 3 anni), storage, rete, licenze. Ogni voce riporta versione del listino e qualifica ACN. Provider separato dal pubblico "Aruba Cloud" (`aruba.py`, note ora con "Listino pubblico cloud.it"). Confronto in `ARUBA_LISTINI.md`.
-  - `psn.py`: **"Polo Strategico Nazionale"**, listino Industry Standard dal 30/04/2026 (canone annuale): IaaS Shared VM e Pool, con e senza HA, e risorse aggiuntive. Compaiono come "Impegno 1 anno" (canone annuale).
+  - `psn.py`: **"Polo Strategico Nazionale"**, listino Industry Standard dal 30/04/2026 (canone annuale, 36 voci): IaaS Shared VM (da Tiny a X-Large) e Pool con e senza HA, risorse aggiuntive, IaaS Private Blade, CaaS (Kubernetes), database PaaS, licenze (Windows Server, Red Hat). Compaiono come "Impegno 1 anno" (canone annuale). **Location `IT`** sia per PSN sia per Aruba Cloud Enterprise.
+  - Verifica dei prezzi PSN: le voci IaaS Shared, Blade e CaaS Licensed Medium hanno tutte un rapporto costante di +0,89% rispetto alla release di maggio 2025: conferma che l'abbinamento è giusto (prima erano 5 voci non confermate). Restano **11 voci abbinate solo per posizione** (nota "da verificare"): CaaS Licensed Large, i 7 database PaaS e le 3 licenze.
   - **Correzione**: nel messaggio del passo 3B avevo scritto che il listino Enterprise dava "VPS O2A4 a 41,70 EUR/mese": era una lettura sbagliata del risultato di ricerca. 41,70 è il Cloud Server PRO **O4A8** (0,05712 EUR/h); il VPS O2A4 costa 9,21 EUR/mese. I confronti corretti sono in `ARUBA_LISTINI.md`.
   - **Mai provato su rete reale.** Da controllare al primo run: righe `aruba-enterprise` e `psn` in `docs/data/status.json` (per Aruba Enterprise l'avviso `note` dice se i prezzi non sono più sulla pagina).
 
@@ -48,9 +49,9 @@ Ultimo aggiornamento: 2026-11-04 (passo 3C).
   - VMware: nessun listino pubblico Broadcom, i valori restano indicativi. Nutanix: nessun prezzo.
   - IONOS: server con core dedicati e Savings Plan, object storage, traffico. Scaleway: storage e traffico. Hetzner: object storage.
 - [ ] **Passo 3C bis: completamenti PSN e Aruba Enterprise** (da decidere)
-  - PSN: mappatura delle colonne di prezzo del PDF ricavata dal testo estratto; **5 voci dipendono solo dalla posizione**: IaaS Shared VM Large e VM X-Large, Pool Small, e IaaS Shared (HA) VM Medium e VM X-Large. Verificarle sul PDF. Non incluse: VM Tiny, storage a blocchi/object, GPU H100, Kubernetes (CaaS), database, sicurezza e backup, Secure Public Cloud (Oracle, Azure, Google).
+  - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
+  - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
-  - Il listino PSN ha molte versioni (2024, 2025, gennaio, aprile 2026): riverificare a ogni nuova release.
 - [ ] **Passo 4: `run.py`, workflow e sicurezza**
   - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
   - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
