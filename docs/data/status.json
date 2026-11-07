@@ -1,6 +1,7 @@
 {
  "azure": {
-  "ok": true,
+  "ok": false,
+  "error": "Azure: nessun prezzo compute letto dalla Retail Prices API. compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re; compute westeurope: 429 Client Error: ",
   "count": 482,
   "date": "2026-11-07",
   "verified_schema": 1
