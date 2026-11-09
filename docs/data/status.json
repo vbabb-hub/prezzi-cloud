@@ -1,20 +1,21 @@
 {
  "azure": {
   "ok": true,
-  "count": 482,
-  "date": "2026-11-08",
-  "verified_schema": 1
+  "count": 466,
+  "date": "2026-11-09",
+  "verified_schema": 1,
+  "note": "gpu: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
  },
  "aws": {
   "ok": true,
   "count": 301,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "ovh": {
   "ok": true,
   "count": 84,
-  "date": "2026-11-08"
+  "date": "2026-11-09"
  },
  "gcp": {
   "ok": false,
@@ -27,87 +28,87 @@
   "ok": true,
   "count": 0,
   "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali di manual/hetzner.yml",
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "oracle": {
   "ok": true,
   "count": 28,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1,
   "note": "Block Volume: voce non trovata nel listino; Object Storage Standard: voce non trovata nel listino"
  },
  "vultr": {
   "ok": true,
   "count": 42,
-  "date": "2026-11-08"
+  "date": "2026-11-09"
  },
  "linode": {
   "ok": true,
   "count": 17,
-  "date": "2026-11-08"
+  "date": "2026-11-09"
  },
  "aruba": {
   "ok": true,
   "count": 22,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "aruba-enterprise": {
   "ok": true,
   "count": 113,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1,
   "note": "verifica online non riuscita (404 Client Error: Not Found for url: https://enterprise.aruba.it/documents/tc-fi)"
  },
  "psn": {
   "ok": true,
   "count": 36,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "seeweb": {
   "ok": true,
   "count": 30,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "stackit": {
   "ok": true,
   "count": 43,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "digitalocean": {
   "ok": true,
   "count": 8,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "exoscale": {
   "ok": true,
   "count": 7,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "entersuite": {
   "ok": true,
   "count": 0,
   "note": "tabella non verificata, rimossa (vedi TODO.md)",
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "proxmox": {
   "ok": true,
   "count": 0,
   "note": "licenze Proxmox e VMware ora in manual/onprem.yml (prezzi verificati)",
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "verified_schema": 1
  },
  "manual": {
   "ok": true,
   "count": 46,
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "da_compilare": 14
  }
 }
