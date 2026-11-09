@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-05 (passo 3C, PSN completato per quanto verificabile).
+Ultimo aggiornamento: 2026-11-08 (passo 5).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -41,6 +41,24 @@ Ultimo aggiornamento: 2026-11-05 (passo 3C, PSN completato per quanto verificabi
   - **Correzione**: nel messaggio del passo 3B avevo scritto che il listino Enterprise dava "VPS O2A4 a 41,70 EUR/mese": era una lettura sbagliata del risultato di ricerca. 41,70 è il Cloud Server PRO **O4A8** (0,05712 EUR/h); il VPS O2A4 costa 9,21 EUR/mese. I confronti corretti sono in `ARUBA_LISTINI.md`.
   - **Mai provato su rete reale.** Da controllare al primo run: righe `aruba-enterprise` e `psn` in `docs/data/status.json` (per Aruba Enterprise l'avviso `note` dice se i prezzi non sono più sulla pagina).
 
+- [x] **Passo 4: `run.py`, workflow e sicurezza.**
+  - `common.py`: `sanitize()` ora maschera anche il valore esatto dei secret (`GCP_API_KEY`, `HCLOUD_TOKEN`), i token Bearer, le chiavi Google e i parametri `key=`, `token=`, `authorization=`. `get()` usa `raise ... from None`: l'URL con la chiave non resta più nel traceback.
+  - `run.py`: `sanitize()` su `status.json`, note, errori e `print`/traceback. Rimesso il controllo sui cali di record **come avviso** (nota in `status.json`: "record calati da X a Y") senza scartare i dati nuovi. Aggiunto il riepilogo delle fonti nella pagina del run su GitHub Actions.
+  - Workflow: un solo run alla volta (`concurrency`) e limite di 45 minuti. I secret `GCP_API_KEY` e `HCLOUD_TOKEN` restano (passo 7).
+  - Da eliminare dal repo: `update.yml` nella radice (duplicato di `.github/workflows/update.yml`).
+  - Provato con una chiave finta in un messaggio di errore: non compare né nel log, né in `status.json`, né nel riepilogo.
+
+- [x] **Passo 5: pagina `docs/index.html`.** Mantenuti il tuo layout, i filtri e la barra dei provider.
+  - Tolti i 4 record di prova con prezzi inventati: se i dati non si caricano compare un errore, non dati falsi.
+  - **Tailwind**: niente più `cdn.tailwindcss.com` (non fissato a una versione e inutilizzabile offline). Il CSS è compilato in `docs/tailwind.css` (13 KB, Tailwind 3.4.17). Dopo ogni modifica alle classi di `index.html` o `app.js` va rigenerato: `npx tailwindcss@3.4.17 -c tailwind/tailwind.config.js -i tailwind/input.css -o docs/tailwind.css --minify` (dalla radice del repo).
+  - **PWA ripristinata**: manifest, icona, registrazione del service worker (`sw.js` v9 con i file giusti), `theme-color`.
+  - **Sicurezza**: nessun codice o stile in linea; la logica è in `docs/app.js`. Tutti i testi dei dati sono protetti (escape) e i link ammettono solo `https`. Content-Security-Policy restrittiva nella pagina. I nomi dei provider non passano più dentro `onclick`.
+  - **Correzioni**: prezzi sotto 1 EUR con 4 decimali (0,0365 non diventa più 0,04); tabella con la colonna vCPU/RAM sempre presente (prima le colonne si sfalsavano fuori da Compute); "Performance" ora è storage ad alte prestazioni; filtri GPU con H200, RTX e "Altre"; `licenses` e `licenza` contate insieme; esportazione CSV con virgolette corrette e colonna note.
+  - **Unità di prezzo**: nuovo filtro, perché confrontare "EUR/GB/mese" con "EUR/mese per pacchetto" non ha senso. Di default si vede l'unità più frequente della categoria; "Tutte le unità" mostra il resto, e il contatore indica quante voci sono nascoste.
+  - **Recuperato dalla versione precedente**: nota di ogni voce sotto lo SKU (così si legge "Listino Enterprise" o "fonte secondaria"), clic su una riga per il dettaglio con lo **storico dei prezzi**, avviso "non aggiornato", pannello **Stato delle fonti** (con le note di `status.json`) e segnalazione se i dati hanno più di 3 giorni.
+  - Da eliminare dal repo: `docs/style.css` (non più usato).
+  - **Non ripristinata**: la matrice di confronto per taglia (provider in riga, 2/4/8/16 vCPU in colonna con il prezzo più basso evidenziato). Se la vuoi, è il passo 5B.
+
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
   - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
@@ -52,17 +70,7 @@ Ultimo aggiornamento: 2026-11-05 (passo 3C, PSN completato per quanto verificabi
   - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
   - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
-- [ ] **Passo 4: `run.py`, workflow e sicurezza**
-  - Rimettere il controllo sui cali di record, come avviso e senza scartare i dati.
-  - Applicare `sanitize()` anche a `status.json` e ai `print`; in `common.get` usare `raise ... from None`.
-  - Cancellare `update.yml` nella radice (duplicato di `.github/workflows/update.yml`).
-- [ ] **Passo 5: `docs/index.html`**
-  - Togliere i 4 record di prova con prezzi inventati.
-  - Ripristinare la PWA (manifest, registrazione del service worker) e sostituire Tailwind da `cdn.tailwindcss.com` con CSS locale: senza versione fissata, non funziona offline.
-  - Escape dei testi inseriti con `innerHTML` e link solo `https`.
-  - Prezzi sotto 1 EUR con 4 decimali (oggi 0,0365 diventa "0,04").
-  - Storage: "Performance" finisce in "Blocco Standard"; categorie `licenses` e `licenza` duplicate nei dati.
-  - Funzioni perse rispetto alla versione precedente: matrice di confronto per taglia, dettaglio con storico, stato delle fonti (serve per mostrare le note di `status.json`).
+- [ ] **Passo 5B (facoltativo): matrice di confronto per taglia** nella pagina.
 - [ ] **Passo 6: Docker e Cloud Run**
   - I dati sono nell'immagine: serve un trigger Cloud Build a ogni push su `main`, altrimenti gli aggiornamenti giornalieri non arrivano.
   - nginx: `Cache-Control: no-cache` su `/data/` e `sw.js`, gzip, intestazioni di sicurezza, immagine `nginx-unprivileged`.
