@@ -1,10 +1,9 @@
 {
  "azure": {
   "ok": true,
-  "count": 466,
+  "count": 482,
   "date": "2026-11-09",
-  "verified_schema": 1,
-  "note": "gpu: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
+  "verified_schema": 1
  },
  "aws": {
   "ok": true,
