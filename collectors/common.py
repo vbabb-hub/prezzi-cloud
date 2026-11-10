@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 
@@ -7,14 +8,21 @@ class Skip(Exception):
 HOURS = 730
 TIERS = {2, 4, 8, 16}  # vCPU considerate nel confronto
 
+_SECRET_ENV = ("GCP_API_KEY", "HCLOUD_TOKEN")
+
+
 def sanitize(text):
-    """Maschera automaticamente chiavi API, token e credenziali nei log e messaggi di errore."""
+    """Maschera chiavi API, token e credenziali in log, errori e file pubblicati (status.json)."""
     if not isinstance(text, str):
         text = str(text)
-    # Maschera chiavi Google (es. AIza...) e token generici lunghi o parametri key=
-    text = re.sub(r'AIza[0-9A-Za-z\-_]{35}', 'AIza***[MASCHERATO]', text)
-    text = re.sub(r'(key|token|secret|password)=([^\s&]+)', r'\1=***[MASCHERATO]', text, flags=re.IGNORECASE)
-    return text
+    for name in _SECRET_ENV:                       # il valore esatto dei secret, ovunque compaia
+        v = os.environ.get(name)
+        if v and len(v) >= 8:
+            text = text.replace(v, "***")
+    text = re.sub(r"AIza[0-9A-Za-z\-_]{20,}", "AIza***", text)
+    text = re.sub(r"(?i)\bbearer\s+[A-Za-z0-9._\-]{16,}", "Bearer ***", text)
+    return re.sub(r"(?i)(key|token|secret|password|apikey|api_key|authorization)=([^\s&'\"]+)", r"\1=***", text)
+
 
 def get(url, **kw):
     try:
@@ -22,8 +30,9 @@ def get(url, **kw):
         r.raise_for_status()
         return r
     except Exception as e:
-        # Pulisce l'eccezione da eventuali chiavi esposte nell'URL
-        raise RuntimeError(sanitize(str(e)))
+        # from None: l'eccezione originale (con l'URL e la chiave) non resta nel traceback
+        raise RuntimeError(sanitize(str(e))) from None
+
 
 def usd_eur():
     try:
