@@ -51,6 +51,10 @@
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Categoria:</span>
                     <div class="flex flex-wrap gap-2" id="category-buttons"></div>
                 </div>
+                <div class="border-t border-slate-800 pt-4" id="mode-container" hidden>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Vista:</span>
+                    <div class="flex flex-wrap gap-2" id="mode-buttons"></div>
+                </div>
                 <div class="border-t border-slate-800 pt-4" id="storage-type-container" hidden>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Tipologia Storage:</span>
                     <div class="flex flex-wrap gap-2" id="storage-type-buttons"></div>
@@ -63,18 +67,18 @@
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Taglia vCPU:</span>
                     <div class="flex flex-wrap gap-2" id="vcpu-type-buttons"></div>
                 </div>
-                <div class="border-t border-slate-800 pt-4">
+                <div class="border-t border-slate-800 pt-4" id="term-container">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Termine / Impegno:</span>
                     <div class="flex flex-wrap gap-2" id="term-buttons"></div>
                 </div>
-                <div class="border-t border-slate-800 pt-4">
+                <div class="border-t border-slate-800 pt-4" id="unit-container">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Unità di prezzo (i prezzi si confrontano solo nella stessa unità):</span>
                     <div class="flex flex-wrap gap-2" id="unit-buttons"></div>
                 </div>
             </div>
 
             <!-- Tabella Risultati -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex-1 flex flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex-1 flex flex-col" id="table-panel">
                 <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                     <h3 class="font-bold text-sm text-slate-200" id="table-title">Listino Compute</h3>
                     <span class="text-xs text-slate-400 font-medium" id="result-count">0 elementi trovati</span>
@@ -97,6 +101,28 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- Confronto per taglia (solo Compute) -->
+            <div class="hidden bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden" id="matrix-panel">
+                <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/50 flex flex-col gap-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <h3 class="font-bold text-sm text-slate-200">Confronto per taglia (euro al mese)</h3>
+                        <span class="text-xs text-slate-400 font-medium" id="matrix-count"></span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-8 gap-y-3">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Impegno:</span>
+                            <div class="flex flex-wrap gap-2" id="matrix-term-buttons"></div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">RAM per vCPU:</span>
+                            <div class="flex flex-wrap gap-2" id="matrix-ratio-buttons"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto" id="matrix-body"></div>
+                <p class="px-6 py-4 text-xs text-slate-400 leading-relaxed border-t border-slate-800" id="matrix-note"></p>
             </div>
         </main>
     </div>

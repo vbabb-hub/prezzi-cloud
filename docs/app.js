@@ -4,7 +4,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "
 const safeUrl = u => { try { const x = new URL(String(u)); return x.protocol === "https:" ? x.href : ""; } catch { return ""; } };
 
 const state = {records: [], series: {}, status: {}, updated: "", category: "compute", term: "all", provider: "all",
-               storageType: "all", gpuType: "all", vcpuType: "all", unit: "auto", sortField: "price", sortAsc: true, view: []};
+               storageType: "all", gpuType: "all", vcpuType: "all", unit: "auto", sortField: "price", sortAsc: true, view: [],
+               mode: "table", mterm: "on-demand", ratio: 4, msort: 4, mcells: []};
 
 const categories = [["compute", "Compute"], ["storage", "Storage"], ["rete", "Rete"], ["gpu", "GPU"], ["colocation", "Colocation"],
                     ["licenses", "Licenze"], ["k8s", "Kubernetes"], ["dbaas", "Database"]];
@@ -13,6 +14,11 @@ const storageTypes = [["all", "Tutti i tipi"], ["object", "Object / S3"], ["bloc
 const gpuTypes = [["all", "Tutte le GPU"], ["h200", "NVIDIA H200"], ["h100", "NVIDIA H100"], ["a100", "NVIDIA A100"], ["l4", "NVIDIA L4 / L40S"],
                   ["a10g", "NVIDIA A10 / T4"], ["rtx", "GeForce RTX"], ["other", "Altre"]];
 const vcpuTypes = [["all", "Tutte le taglie"], ["1", "1 vCPU"], ["2", "2 vCPU"], ["4", "4 vCPU"], ["8", "8 vCPU"], ["16", "16+ vCPU"]];
+const modes = [["table", "Elenco"], ["matrix", "Confronto per taglia"]];
+const TIERS = [2, 4, 8, 16];
+const matrixTerms = [["on-demand", "On-demand"], ["1 anno", "Impegno 1 anno"], ["3 anni", "Impegno 3 anni"]];
+const matrixRatios = [2, 4, 8];
+const matrixOn = () => state.category === "compute" && state.mode === "matrix";
 
 const flags = {"aruba cloud": "🇮🇹", "aruba cloud enterprise": "🇮🇹", "polo strategico nazionale": "🇮🇹", "seeweb": "🇮🇹", "enter cloud suite": "🇮🇹",
                "aws": "🇺🇸", "azure": "🇺🇸", "gcp": "🇺🇸", "digitalocean": "🇺🇸", "vultr": "🇺🇸", "oracle cloud": "🇺🇸", "akamai linode": "🇺🇸",
@@ -92,10 +98,14 @@ function renderFilters() {
   const show = (id, on) => { $(id).hidden = !on; };
   show("storage-type-container", state.category === "storage");
   show("gpu-type-container", state.category === "gpu");
-  show("vcpu-type-container", state.category === "compute");
+  show("vcpu-type-container", state.category === "compute" && !matrixOn());
+  show("mode-container", state.category === "compute");
+  show("term-container", !matrixOn());
+  show("unit-container", !matrixOn());
   $("storage-type-buttons").innerHTML = storageTypes.map(([id, n]) => chip("storage", id, n, state.storageType === id, "bg-amber-600 text-white shadow")).join("");
   $("gpu-type-buttons").innerHTML = gpuTypes.map(([id, n]) => chip("gpu", id, n, state.gpuType === id, "bg-purple-600 text-white shadow")).join("");
   $("vcpu-type-buttons").innerHTML = vcpuTypes.map(([id, n]) => chip("vcpu", id, n, state.vcpuType === id, "bg-indigo-600 text-white shadow")).join("");
+  $("mode-buttons").innerHTML = modes.map(([id, n]) => chip("mode", id, n, state.mode === id, "bg-indigo-600 text-white shadow")).join("");
   $("term-buttons").innerHTML = terms.map(([id, n]) => chip("term", id, n, state.term === id, "bg-emerald-600 text-white shadow")).join("");
   const units = {};
   state.records.filter(inCategory).forEach(r => { const u = r.unit || "?"; units[u] = (units[u] || 0) + 1; });
@@ -140,6 +150,57 @@ function renderTable() {
   }).join("");
 }
 
+// ---- Confronto per taglia: provider in riga, 2/4/8/16 vCPU in colonna, prezzo più basso di ogni colonna evidenziato
+const diskInfo = r => { const n = String(r.note || ""); return /senza (storage|disco)/i.test(n) ? "senza disco" : /incl\.?\s*\d+\s*GB|disco e traffico|include disco|\d+\s*GB (NVMe|SSD)/i.test(n) ? "disco incluso" : ""; };
+
+function matrixCells(wanted) {
+  const cells = {};
+  state.records.forEach(r => {
+    if (kindOf(r) !== "compute" || (r.unit || "") !== "EUR/mese") return;
+    const v = Number(vcpuOf(r)), ram = Number(ramOf(r)), price = Number(r.price);
+    if (!TIERS.includes(v) || !(ram > 0) || !(price > 0) || Math.round(ram / v) !== state.ratio || termKey(r) !== wanted) return;
+    const row = (cells[r.provider] ??= {});
+    if (!row[v] || price < Number(row[v].price)) row[v] = r;
+  });
+  return cells;
+}
+
+function renderMatrix() {
+  $("matrix-term-buttons").innerHTML = matrixTerms.map(([id, n]) => chip("mterm", id, n, state.mterm === id, "bg-emerald-600 text-white shadow")).join("");
+  $("matrix-ratio-buttons").innerHTML = matrixRatios.map(x => chip("ratio", x, `${x} GB per vCPU`, state.ratio === x, "bg-indigo-600 text-white shadow")).join("");
+  const cells = matrixCells(state.mterm);
+  if (state.mterm !== "on-demand") {            // senza sconto per impegno si mostra il prezzo on-demand, segnalato con (OD)
+    const od = matrixCells("on-demand");
+    for (const p in od) for (const t in od[p]) if (!cells[p]?.[t]) (cells[p] ??= {})[t] = {...od[p][t], __od: true};
+  }
+  const min = {};
+  TIERS.forEach(t => { const v = Object.values(cells).map(c => c[t] && Number(c[t].price)).filter(x => x > 0); min[t] = v.length ? Math.min(...v) : null; });
+  const price = (p, t) => cells[p][t] ? Number(cells[p][t].price) : Infinity;
+  const rows = Object.keys(cells).sort((a, b) => price(a, state.msort) - price(b, state.msort) || a.localeCompare(b));
+  const all = [...new Set(state.records.filter(r => kindOf(r) === "compute" && r.provider).map(r => r.provider))];
+  const missing = all.filter(p => !cells[p]).sort();
+  $("matrix-count").textContent = `${rows.length} provider a confronto`;
+  state.mcells = [];
+  if (!rows.length) {
+    $("matrix-body").innerHTML = `<p class="py-16 text-center text-slate-500 text-sm font-medium">Nessuna configurazione con ${state.ratio} GB per vCPU.</p>`;
+  } else {
+    const head = TIERS.map(t => `<th class="py-3 px-2 text-right"><button type="button" data-msort="${t}" aria-pressed="${state.msort === t}" class="px-3 py-1 rounded-lg text-right cursor-pointer transition ${state.msort === t ? "text-white" : "text-slate-400 hover:text-indigo-300"}">${t} vCPU<span class="block text-[11px] font-normal text-slate-500">${t * state.ratio} GB${state.msort === t ? " ↓" : ""}</span></button></th>`).join("");
+    const body = rows.map(p => `<tr><th scope="row" class="py-2 px-4 text-left sticky left-0 bg-slate-900 whitespace-nowrap"><button type="button" data-mprov="${esc(p)}" class="font-semibold text-white hover:text-indigo-300 cursor-pointer text-left">${flagOf(p)} ${esc(p)}</button></th>${TIERS.map(t => {
+      const r = cells[p][t];
+      if (!r) return `<td class="py-3 px-4 text-right text-slate-600">–</td>`;
+      const idx = state.mcells.push(r) - 1, pr = Number(r.price), isMin = pr === min[t], d = min[t] > 0 ? (pr / min[t] - 1) * 100 : null;
+      const label = (isMin ? "più basso" : d == null ? "" : `+${Math.round(d)}%`) + (r.__od ? " (OD)" : ""), disk = diskInfo(r);
+      return `<td class="py-2 px-2"><button type="button" data-m="${idx}" class="w-full text-right px-3 py-2 rounded-lg transition cursor-pointer ${isMin ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40" : "text-slate-200 hover:bg-slate-800"}"><span class="block font-bold">${esc(fmtPrice(pr))}</span><span class="block text-[11px] ${isMin ? "text-emerald-300/80" : "text-slate-400"}">${esc(label)}</span>${disk ? `<span class="block text-[10px] text-slate-500">${esc(disk)}</span>` : ""}</button></td>`;
+    }).join("")}</tr>`).join("");
+    $("matrix-body").innerHTML = `<table class="w-full text-sm border-collapse min-w-[520px]"><thead><tr class="border-b border-slate-800 bg-slate-950/70 text-xs font-bold uppercase tracking-wider"><th class="py-3 px-4 text-left text-slate-400">Provider</th>${head}</tr></thead><tbody class="divide-y divide-slate-800">${body}</tbody></table>`;
+  }
+  $("matrix-note").textContent = `Euro al mese, listino IVA esclusa. Ogni cella è la configurazione più economica del provider con ${state.ratio} GB di RAM per vCPU, tra tutte le regioni raccolte; la cella evidenziata è la più bassa della colonna. `
+    + `I prezzi non sono tutti omogenei: alcuni includono disco e traffico, altri no (la nota sotto il prezzo lo dice: tocca una cella per il dettaglio, la fonte e lo storico). `
+    + (state.mterm !== "on-demand" ? "OD indica che per quel provider non c'è (o non è stato trovato) uno sconto per impegno e si mostra il prezzo on-demand. " : "")
+    + "Il Polo Strategico Nazionale ha solo canoni annuali, quindi compare con l'impegno a 1 anno. "
+    + (missing.length ? `Senza configurazioni a ${state.ratio} GB per vCPU: ${missing.join(", ")}.` : "");
+}
+
 function renderStatus() {
   const rows = Object.entries(state.status).map(([name, s]) => {
     const bad = s.ok === false, pend = s.pending;
@@ -157,7 +218,12 @@ function renderHeader() {
   el.className = `text-xs ${days > 3 ? "text-amber-400" : "text-slate-400"}`;
 }
 
-function renderAll() { renderFilters(); renderProviders(); renderTable(); }
+function renderAll() {
+  renderFilters(); renderProviders();
+  $("table-panel").classList.toggle("hidden", matrixOn());
+  $("matrix-panel").classList.toggle("hidden", !matrixOn());
+  if (matrixOn()) renderMatrix(); else renderTable();
+}
 
 function sparkPath(p, w, h) {
   if (p.length < 2) return `M0,${h / 2}H${w}`;
@@ -204,7 +270,7 @@ function exportCsv() {
 document.addEventListener("click", e => {
   const t = e.target;
   if (t === $("detail")) { $("detail").close(); return; }               // clic sullo sfondo
-  const b = t.closest("[data-close],[data-cat],[data-storage],[data-gpu],[data-vcpu],[data-term],[data-unit],[data-prov],[data-sort],#btn-csv");
+  const b = t.closest("[data-close],[data-cat],[data-storage],[data-gpu],[data-vcpu],[data-term],[data-unit],[data-prov],[data-sort],[data-mode],[data-mterm],[data-ratio],[data-msort],[data-mprov],[data-m],#btn-csv");
   if (b) {
     const d = b.dataset;
     if ("close" in d) { $("detail").close(); return; }
@@ -215,7 +281,13 @@ document.addEventListener("click", e => {
     else if (d.vcpu) state.vcpuType = d.vcpu;
     else if (d.term) state.term = d.term;
     else if (d.unit) state.unit = d.unit;
-    else if (d.prov) state.provider = d.prov;
+    else if (d.mode) state.mode = d.mode;
+    else if (d.mterm) state.mterm = d.mterm;
+    else if (d.ratio) state.ratio = Number(d.ratio);
+    else if (d.msort) state.msort = Number(d.msort);
+    else if (d.mprov) Object.assign(state, {mode: "table", provider: d.mprov, vcpuType: "all", term: "all", unit: "auto"});
+    else if (d.m !== undefined) { const r = state.mcells[Number(d.m)]; if (r) openDetail(r); return; }
+    else if (d.prov) { state.provider = d.prov; if (matrixOn()) state.mode = "table"; }
     else if (d.sort) { state.sortAsc = state.sortField === d.sort ? !state.sortAsc : true; state.sortField = d.sort; renderTable(); return; }
     renderAll();
     return;
