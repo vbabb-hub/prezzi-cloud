@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-10 (passo 6).
+Ultimo aggiornamento: 2026-11-10 (passo 5B).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -57,13 +57,20 @@ Ultimo aggiornamento: 2026-11-10 (passo 6).
   - **Unità di prezzo**: nuovo filtro, perché confrontare "EUR/GB/mese" con "EUR/mese per pacchetto" non ha senso. Di default si vede l'unità più frequente della categoria; "Tutte le unità" mostra il resto, e il contatore indica quante voci sono nascoste.
   - **Recuperato dalla versione precedente**: nota di ogni voce sotto lo SKU (così si legge "Listino Enterprise" o "fonte secondaria"), clic su una riga per il dettaglio con lo **storico dei prezzi**, avviso "non aggiornato", pannello **Stato delle fonti** (con le note di `status.json`) e segnalazione se i dati hanno più di 3 giorni.
   - Da eliminare dal repo: `docs/style.css` (non più usato).
-  - **Non ripristinata**: la matrice di confronto per taglia (provider in riga, 2/4/8/16 vCPU in colonna con il prezzo più basso evidenziato). Se la vuoi, è il passo 5B.
+  - La matrice di confronto per taglia è stata aggiunta nel passo 5B.
 
 - [x] **Passo 6: Docker e Cloud Run.**
   - `Dockerfile`: immagine `nginxinc/nginx-unprivileged:1.27-alpine` (non gira come root, porta 8080); `.dockerignore`: nel contesto di build solo `docs` e `nginx`, senza `docs/data/history`. Il vecchio Dockerfile scriveva la configurazione con `echo`, senza intestazioni di sicurezza né regole di cache, e con nginx come root.
   - `nginx/default.conf` e `nginx/security-headers.conf`: Content-Security-Policy, HSTS e altre intestazioni; `Cache-Control: no-cache` per pagina, dati e `sw.js` (solo `icon.svg` in cache un giorno); gzip; manifest col tipo giusto; solo GET e HEAD; file nascosti bloccati; versione di nginx nascosta. **Provata con un nginx reale**: la prima versione dava 404 su `/` e serviva il manifest come `text/plain`, entrambi corretti.
   - `cloudbuild.yaml` e `DEPLOY.md`: ricostruzione dell'immagine e deploy su Cloud Run. Il problema è che i dati stanno nell'immagine: serve un trigger Cloud Build a ogni push su `main` (filtro sui file) oppure una ricostruzione giornaliera programmata.
   - **Non provati** (non disponibili nella sandbox): `docker build` e Cloud Build. Da controllare: che la build parta dopo il commit del workflow giornaliero (se no, usare la ricostruzione programmata), l'esistenza del repository di Artifact Registry e i ruoli dell'account di servizio di Cloud Build.
+
+- [x] **Passo 5B: confronto per taglia nella pagina.** In Compute compare la scelta "Vista": *Elenco* (la tabella di prima) oppure *Confronto per taglia*.
+  - Matrice con i provider in riga e 2, 4, 8, 16 vCPU in colonna: ogni cella è la configurazione più economica del provider (tra tutte le regioni) con il rapporto RAM/vCPU scelto (2, 4 o 8 GB); la più bassa di ogni colonna è evidenziata e le altre mostrano la differenza percentuale. Si ordina cliccando l'intestazione di una colonna.
+  - Scelta dell'impegno (on-demand, 1 anno, 3 anni): dove un provider non ha lo sconto compare il prezzo on-demand con "(OD)". Il Polo Strategico Nazionale ha solo canone annuale, quindi compare con l'impegno a 1 anno.
+  - Cliccando una cella si apre il dettaglio con nota, fonte e storico; cliccando il nome di un provider si passa all'elenco filtrato su di lui. Sotto il prezzo compare "disco incluso" o "senza disco" quando la nota lo dice.
+  - Limite noto: i prezzi non sono tutti omogenei (alcuni provider includono disco e traffico, altri no); la nota sotto la matrice lo avverte, ma il confronto va letto con il dettaglio. Si considerano solo voci in EUR/mese con vCPU e RAM esatte, non i prezzi per risorsa.
+  - Dopo aver cambiato le classi di `index.html` o `app.js` va rigenerato `docs/tailwind.css` (comando nel passo 5). `sw.js` è passato a v10.
 
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
@@ -76,7 +83,6 @@ Ultimo aggiornamento: 2026-11-10 (passo 6).
   - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
   - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
-- [ ] **Passo 5B (facoltativo): matrice di confronto per taglia** nella pagina.
 - [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner** (rimandate su richiesta)
   - Oggi GCP è vuoto e Hetzner usa solo i 6 prezzi manuali.
   - GCP: creare una chiave API nuova, limitata alla sola Cloud Billing API, e salvarla come secret `GCP_API_KEY`. **Revocare la vecchia chiave** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).
