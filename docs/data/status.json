@@ -18,7 +18,7 @@
  },
  "gcp": {
   "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***[MASCHERATO]&currencyCode=EUR&pageSize=5000",
+  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***&currencyCode=EUR&pageSize=5000",
   "count": 0,
   "date": "2026-11-02",
   "verified_schema": null
