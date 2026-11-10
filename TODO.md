@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-08 (passo 5).
+Ultimo aggiornamento: 2026-11-10 (passo 6).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -59,6 +59,12 @@ Ultimo aggiornamento: 2026-11-08 (passo 5).
   - Da eliminare dal repo: `docs/style.css` (non più usato).
   - **Non ripristinata**: la matrice di confronto per taglia (provider in riga, 2/4/8/16 vCPU in colonna con il prezzo più basso evidenziato). Se la vuoi, è il passo 5B.
 
+- [x] **Passo 6: Docker e Cloud Run.**
+  - `Dockerfile`: immagine `nginxinc/nginx-unprivileged:1.27-alpine` (non gira come root, porta 8080); `.dockerignore`: nel contesto di build solo `docs` e `nginx`, senza `docs/data/history`. Il vecchio Dockerfile scriveva la configurazione con `echo`, senza intestazioni di sicurezza né regole di cache, e con nginx come root.
+  - `nginx/default.conf` e `nginx/security-headers.conf`: Content-Security-Policy, HSTS e altre intestazioni; `Cache-Control: no-cache` per pagina, dati e `sw.js` (solo `icon.svg` in cache un giorno); gzip; manifest col tipo giusto; solo GET e HEAD; file nascosti bloccati; versione di nginx nascosta. **Provata con un nginx reale**: la prima versione dava 404 su `/` e serviva il manifest come `text/plain`, entrambi corretti.
+  - `cloudbuild.yaml` e `DEPLOY.md`: ricostruzione dell'immagine e deploy su Cloud Run. Il problema è che i dati stanno nell'immagine: serve un trigger Cloud Build a ogni push su `main` (filtro sui file) oppure una ricostruzione giornaliera programmata.
+  - **Non provati** (non disponibili nella sandbox): `docker build` e Cloud Build. Da controllare: che la build parta dopo il commit del workflow giornaliero (se no, usare la ricostruzione programmata), l'esistenza del repository di Artifact Registry e i ruoli dell'account di servizio di Cloud Build.
+
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
   - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
@@ -71,9 +77,6 @@ Ultimo aggiornamento: 2026-11-08 (passo 5).
   - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
 - [ ] **Passo 5B (facoltativo): matrice di confronto per taglia** nella pagina.
-- [ ] **Passo 6: Docker e Cloud Run**
-  - I dati sono nell'immagine: serve un trigger Cloud Build a ogni push su `main`, altrimenti gli aggiornamenti giornalieri non arrivano.
-  - nginx: `Cache-Control: no-cache` su `/data/` e `sw.js`, gzip, intestazioni di sicurezza, immagine `nginx-unprivileged`.
 - [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner** (rimandate su richiesta)
   - Oggi GCP è vuoto e Hetzner usa solo i 6 prezzi manuali.
   - GCP: creare una chiave API nuova, limitata alla sola Cloud Billing API, e salvarla come secret `GCP_API_KEY`. **Revocare la vecchia chiave** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).

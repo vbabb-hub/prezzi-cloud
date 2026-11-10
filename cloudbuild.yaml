@@ -1,0 +1,33 @@
+# Ricostruisce l'immagine con i dati più recenti e la pubblica su Cloud Run.
+# Parametri da adattare qui sotto (substitutions) o dal trigger.
+substitutions:
+  _REGION: europe-west1
+  _SERVICE: prezzi-cloud
+  _REPO: cloud-run-source-deploy   # repository di Artifact Registry già esistente nella stessa regione
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}", "."]
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}"]
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated   # sito pubblico come oggi: toglierlo per renderlo privato
+      - --port=8080
+      - --memory=128Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=2
+
+options:
+  logging: CLOUD_LOGGING_ONLY

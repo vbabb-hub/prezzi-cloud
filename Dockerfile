@@ -1,20 +1,9 @@
-FROM nginx:alpine
+# Pagina statica servita da nginx senza privilegi (non root), pronta per Cloud Run sulla porta 8080.
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
-# Copia i file della PWA nella cartella standard di Nginx
-COPY docs /usr/share/nginx/html
+# I dati (docs/data) sono compresi nell'immagine: serve ricostruirla a ogni aggiornamento, vedi README.md (Cloud Build).
+COPY docs/ /usr/share/nginx/html/
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/security-headers.conf /etc/nginx/security-headers.conf
 
-# Scriviamo direttamente una configurazione Nginx pulita che ascolta sulla porta 8080
-RUN echo 'server { \
-    listen 8080; \
-    server_name localhost; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
-
-# Esponi la porta 8080 richiesta da Cloud Run
 EXPOSE 8080
-
-# Avvia Nginx
-CMD ["nginx", "-g", "daemon off;"]
