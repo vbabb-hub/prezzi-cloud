@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-10 (passo 5B).
+Ultimo aggiornamento: 2026-11-10 (passo 7: materiali pronti, restano le azioni sulle chiavi).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -83,11 +83,13 @@ Ultimo aggiornamento: 2026-11-10 (passo 5B).
   - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
   - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
-- [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner** (rimandate su richiesta)
-  - Oggi GCP è vuoto e Hetzner usa solo i 6 prezzi manuali.
-  - GCP: creare una chiave API nuova, limitata alla sola Cloud Billing API, e salvarla come secret `GCP_API_KEY`. **Revocare la vecchia chiave** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo).
-  - Hetzner: token di sola lettura come secret `HCLOUD_TOKEN` (facoltativo; poi eliminare `manual/hetzner.yml` per non avere doppioni).
-  - Dopo il primo run controllare `status.json` e le SKU GCP.
+- [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner.** Materiali pronti; restano le azioni tue (guida passo per passo in `GUIDA_CHIAVI.md`).
+  - Pronti: `GUIDA_CHIAVI.md`; workflow **Verifica chiavi** (`.github/workflows/check-keys.yml` e `collectors/check_keys.py`) che controlla che i secret funzionino, senza mai stamparli, e spiega gli errori (chiave non valida, API non abilitata, restrizioni sbagliate, token revocato). Provato con risposte simulate, non con chiavi vere.
+  - [ ] **Revocare la vecchia chiave Google** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo): console Google → API e servizi → Credenziali → elimina.
+  - [ ] Creare la nuova chiave Google limitata alla sola Cloud Billing API e salvarla come secret `GCP_API_KEY`.
+  - [ ] (facoltativo) Token Hetzner di sola lettura come secret `HCLOUD_TOKEN`; poi eliminare `manual/hetzner.yml` per non avere doppioni. Senza token restano i 6 prezzi ufficiali del 15/06/2026, che non si aggiornano da soli.
+  - [ ] Lanciare **Verifica chiavi**, poi **Aggiorna prezzi**, e controllare in `docs/data/status.json` le righe `gcp` e `hetzner`. Per GCP il punto meno sicuro sono i nomi delle SKU: se `gcp` risulta con 0 voci o con un errore, serve guardare il messaggio.
+  - [ ] Dopo il primo run con GCP e OVHcloud: se OVHcloud mostra le GPU dal catalogo, eliminare `manual/gpuaas.yml` (fonti terze, doppioni).
 
 ## Voci rimosse al passo 1 (non verificabili: restano qui per traccia)
 **Aruba** (valori che erano nel collector):
