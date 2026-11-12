@@ -1,10 +1,9 @@
 {
  "azure": {
   "ok": true,
-  "count": 270,
+  "count": 482,
   "date": "2026-11-12",
-  "verified_schema": 1,
-  "note": "compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com:443/api/re; storage_network: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail; gpu: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
+  "verified_schema": 1
  },
  "aws": {
   "ok": true,
@@ -26,10 +25,10 @@
  },
  "hetzner": {
   "ok": true,
-  "count": 0,
-  "note": "HCLOUD_TOKEN non impostato: uso i prezzi manuali di manual/hetzner.yml",
+  "count": 17,
   "date": "2026-11-12",
-  "verified_schema": 1
+  "verified_schema": 1,
+  "note": "pricing: 'traffic'"
  },
  "oracle": {
   "ok": true,
@@ -107,8 +106,8 @@
  },
  "manual": {
   "ok": true,
-  "count": 46,
+  "count": 40,
   "date": "2026-11-12",
-  "da_compilare": 14
+  "da_compilare": 13
  }
 }
