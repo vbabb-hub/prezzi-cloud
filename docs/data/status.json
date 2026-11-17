@@ -17,11 +17,10 @@
   "date": "2026-11-17"
  },
  "gcp": {
-  "ok": false,
-  "error": "403 Client Error: Forbidden for url: https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=***&currencyCode=EUR&pageSize=5000",
-  "count": 0,
-  "date": "2026-11-02",
-  "verified_schema": null
+  "ok": true,
+  "count": 44,
+  "date": "2026-11-17",
+  "verified_schema": 1
  },
  "hetzner": {
   "ok": true,
