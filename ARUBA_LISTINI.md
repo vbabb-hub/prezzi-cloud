@@ -4,7 +4,7 @@ Nel sito compaiono due provider distinti, perché Aruba ha due listini con prezz
 
 | | **Aruba Cloud** (pubblico) | **Aruba Cloud Enterprise** |
 |---|---|---|
-| Fonte | cloud.it/prezzi, letto il 27/10/2026 | "Listino per il Mercato Enterprise" v. ARB-11740-1, valido dal 03/08/2026 (enterprise.aruba.it), aggiornato ogni mese |
+| Fonte | cloud.it/prezzi, letto il 27/10/2026 | "Listino per il Mercato Enterprise" (enterprise.aruba.it), versione ARB-11761-1 valida dal 24/08/2026; Aruba lo aggiorna ogni mese e il collector legge la versione corrente |
 | Per chi | acquisto diretto online | enterprise e PA: servizi con qualifica ACN (ogni voce riporta ID e livello, per esempio IA-418 QC1) |
 | Impegni | prezzo annuale (non il 3 anni) | 1 anno circa -10% sul mensile; 3 anni solo sui server dedicati |
 | Ambito | compute, storage, rete, GPU on Demand | in più VPS, Virtual Data Center, Kubernetes, DBaaS, server dedicati con GPU, VMware, backup |
@@ -27,6 +27,8 @@ Con impegno a 1 anno (al mese): O2A4 19,50 contro 20,70; O4A8 30,33 contro 37,53
 Block Storage (euro per GB al mese): Standard AZ 0,0365 contro 0,0438; Performance AZ 0,0657 contro 0,0803; Standard Regional 0,0584 contro 0,0730; Performance Regional 0,0949 contro 0,1168 (circa +20-25% sull'Enterprise).
 
 GPU: il server con L40S costa 1.979,90 al mese sul pubblico (GPU on Demand) e 2.942,66 sull'Enterprise (AI-A110, 2 CPU EPYC 9124, 128 GB). La RTX 4080 Super costa 529,90 contro 1.011,38 (AI-A109). **Le configurazioni non sono identiche**: il confronto va fatto sulla scheda tecnica, non solo sul prezzo.
+
+Le cifre di questa pagina sono quelle della versione ARB-11761-1 e del listino pubblico del 27/10/2026: il sito mostra sempre i prezzi dell'ultima lettura.
 
 ## Come leggere la differenza
 - Il listino Enterprise è quello da usare per offerte a PA o enterprise con requisiti ACN; quello pubblico è un riferimento di mercato più basso.

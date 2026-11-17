@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-10 (passo 7: materiali pronti, restano le azioni sulle chiavi).
+Ultimo aggiornamento: 2026-11-10 (passo 8, dai log del primo run).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -72,6 +72,13 @@ Ultimo aggiornamento: 2026-11-10 (passo 7: materiali pronti, restano le azioni s
   - Limite noto: i prezzi non sono tutti omogenei (alcuni provider includono disco e traffico, altri no); la nota sotto la matrice lo avverte, ma il confronto va letto con il dettaglio. Si considerano solo voci in EUR/mese con vCPU e RAM esatte, non i prezzi per risorsa.
   - Dopo aver cambiato le classi di `index.html` o `app.js` va rigenerato `docs/tailwind.css` (comando nel passo 5). `sw.js` è passato a v10.
 
+- [x] **Passo 8: correzioni dai log del primo run (Aruba, Azure, Oracle).**
+  - **Aruba Enterprise, 404 sul listino**: Aruba aggiorna il listino ogni mese e a ogni versione cambia il numero del documento (da ARB-11740-1 a ARB-11761-1, valido dal 24/08/2026), togliendo il vecchio indirizzo. Ora `aruba_enterprise.py` trova la versione corrente (prova l'ultima nota e, se non c'è più, cerca nei 120 numeri successivi) e **legge i prezzi dal documento** per codice servizio (Cep-0002, Stp-0012…). La tabella resta solo come ripiego per le voci non leggibili, con un avviso in `status.json`. I prezzi della versione 11761-1 coincidono con quelli di prima. Se il formato del documento cambia l'avviso lo dice.
+  - **Errore trovato strada facendo**: `common.get` passava il parametro `timeout` due volte quando un collector lo specificava (andava in errore); corretto.
+  - **Azure, 429 Too Many Requests su Italy North**: `common.get` ora riprova con attesa sui 429 e sugli errori temporanei (rispetta `Retry-After`, altrimenti 2, 4, 8, 16, 30 secondi) e `azure_cloud.py` fa una pausa di 0,3 s tra le pagine. Vale per tutti i collector. Se Azure continua a rifiutare, l'avviso resta e mancano i dati di quella regione (non tornano dati vecchi).
+  - **Oracle, Block Volume e Object Storage "non trovati"**: Oracle li chiama "Storage - Block Volume - Storage" e "Storage - Object Storage - Storage", mentre la ricerca partiva dall'inizio del nome. Ora si riconoscono per nome e per codice prodotto (B91961, B91628); se mancano, l'avviso elenca i nomi simili trovati.
+  - Provato con risposte simulate (compresa una nuova versione del listino Aruba con prezzi cambiati e un valore assurdo scartato), non con le API reali. Da controllare al prossimo run: righe `aruba-enterprise` (nota), `azure` (le voci devono includere `italynorth`), `oracle` (nessun avviso su Block Volume e Object Storage).
+
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
   - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
@@ -79,12 +86,16 @@ Ultimo aggiornamento: 2026-11-10 (passo 7: materiali pronti, restano le azioni s
   - Proxmox: verificare Standard e Premium sul sito ufficiale (valori usati 550 e 1.100 da fonti secondarie; il vecchio collector aveva 1.020 e 2.040).
   - VMware: nessun listino pubblico Broadcom, i valori restano indicativi. Nutanix: nessun prezzo.
   - IONOS: server con core dedicati e Savings Plan, object storage, traffico. Scaleway: storage e traffico. Hetzner: object storage.
+- [ ] **Aperti emersi dai log del primo run**
+  - Hetzner: avviso `pricing: 'traffic'`. Con ogni probabilità l'API non ha più la chiave `traffic` in `/pricing`: il prezzo del traffico extra sta nei prezzi di ogni tipo di server (`price_per_tb_traffic`). Da correggere in `hetzner.py`.
+  - GCP: 403 (`Forbidden`): è la chiave del passo 7 (abilitare Cloud Billing API e limitare la chiave a quella sola API); "Verifica chiavi" dice il motivo.
 - [ ] **Passo 3C bis: completamenti PSN e Aruba Enterprise** (da decidere)
   - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
   - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
 - [ ] **Passo 7 (ultimo): chiavi GCP e Hetzner.** Materiali pronti; restano le azioni tue (guida passo per passo in `GUIDA_CHIAVI.md`).
   - Pronti: `GUIDA_CHIAVI.md`; workflow **Verifica chiavi** (`.github/workflows/check-keys.yml` e `collectors/check_keys.py`) che controlla che i secret funzionino, senza mai stamparli, e spiega gli errori (chiave non valida, API non abilitata, restrizioni sbagliate, token revocato). Provato con risposte simulate, non con chiavi vere.
+  - Primo tentativo: `PERMISSION_DENIED` perché Cloud Billing API non era abilitata nel progetto (non compare tra le restrizioni della chiave finché non è abilitata); guida e messaggi di `Verifica chiavi` corretti.
   - [ ] **Revocare la vecchia chiave Google** comparsa in passato in `status.json` (resta nella cronologia pubblica del repo): console Google → API e servizi → Credenziali → elimina.
   - [ ] Creare la nuova chiave Google limitata alla sola Cloud Billing API e salvarla come secret `GCP_API_KEY`.
   - [ ] (facoltativo) Token Hetzner di sola lettura come secret `HCLOUD_TOKEN`; poi eliminare `manual/hetzner.yml` per non avere doppioni. Senza token restano i 6 prezzi ufficiali del 15/06/2026, che non si aggiornano da soli.
