@@ -1,7 +1,9 @@
 """Azure: Retail Prices API ufficiale (pubblica, nessuna chiave), prezzi in EUR.
 On-demand (pay-as-you-go), Reservation a 1 e 3 anni (prezzo totale del termine / mesi), Blob Hot LRS, traffico in uscita,
-VM GPU. La RAM non è nell'API: è quella della famiglia (D v5 = 4, E v5 = 8, F v2 = 2 GB per vCPU). Nessun prezzo stimato."""
+VM GPU. La RAM non è nell'API: è quella della famiglia (D v5 = 4, E v5 = 8, F v2 = 2 GB per vCPU). Nessun prezzo stimato.
+L'API limita le richieste (HTTP 429): common.get() riprova con attesa, e qui c'è una pausa tra una pagina e l'altra."""
 import re
+import time
 from common import get, vm, sanitize, TIERS
 
 URL = "https://prices.azure.com/api/retail/prices"
@@ -13,6 +15,7 @@ GPU_SKUS = {"Standard_ND96isr_H100_v5": (8, "NVIDIA H100 80GB"), "Standard_NC40a
             "Standard_NC24ads_A100_v4": (1, "NVIDIA A100 80GB"), "Standard_NC96ads_A100_v4": (4, "NVIDIA A100 80GB"),
             "Standard_ND96amsr_A100_v4": (8, "NVIDIA A100 80GB")}
 GPU_REGIONS = {"westeurope": "Paesi Bassi", "italynorth": "Milano", "swedencentral": "Svezia", "francecentral": "Francia"}
+PAGE_PAUSE = 0.3          # secondi tra una pagina e l'altra (mille voci per pagina)
 WARNINGS = []
 
 
@@ -22,6 +25,8 @@ def _items(flt):
         d = get(url, params=params).json()
         params, url = None, d.get("NextPageLink")
         out += d["Items"]
+        if url:
+            time.sleep(PAGE_PAUSE)
     return out
 
 
@@ -85,10 +90,9 @@ def _gpu(out):
             n, model = GPU_SKUS[i["armSkuName"]]
             k = (region, i["armSkuName"])
             if k not in best or i["retailPrice"] / n < best[k]["price"]:
-                nm = i["armSkuName"].replace("Standard_", "")
-                best[k] = dict(provider="Azure", region=f"{region} ({GPU_REGIONS[region]})", kind="gpu", sku=f"{nm} ({n}x {model})", unit="EUR/ora",
+                best[k] = dict(provider="Azure", region=f"{region} ({GPU_REGIONS[region]})", kind="gpu", sku=model, unit="EUR/ora",
                                price=round(i["retailPrice"] / n, 4), term="On-demand", source=URL,
-                               note=f"prezzo per GPU; istanza intera {i['retailPrice']:.2f} EUR/ora, include vCPU e RAM")
+                               note=f"{i['armSkuName'].replace('Standard_', '')}: {n} GPU, include vCPU e RAM")
     out.extend(best.values())
 
 

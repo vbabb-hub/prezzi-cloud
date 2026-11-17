@@ -1,5 +1,7 @@
 import os
+import random
 import re
+import time
 import requests
 
 class Skip(Exception):
@@ -24,14 +26,38 @@ def sanitize(text):
     return re.sub(r"(?i)(key|token|secret|password|apikey|api_key|authorization)=([^\s&'\"]+)", r"\1=***", text)
 
 
-def get(url, **kw):
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+def _pause(resp, attempt):
+    """Attesa prima di riprovare: Retry-After del server se c'è (max 60 s), altrimenti 2, 4, 8, 16, 30 s più un po' di casualità."""
     try:
-        r = requests.get(url, timeout=180, **kw)
-        r.raise_for_status()
-        return r
-    except Exception as e:
-        # from None: l'eccezione originale (con l'URL e la chiave) non resta nel traceback
-        raise RuntimeError(sanitize(str(e))) from None
+        wait = min(float(resp.headers.get("Retry-After")), 60)
+    except (TypeError, ValueError, AttributeError):
+        wait = min(2 ** (attempt + 1), 30) + random.uniform(0, 1)
+    time.sleep(wait)
+
+
+def get(url, **kw):
+    """GET con timeout e nuovi tentativi su 429 e errori temporanei del server; gli altri errori falliscono subito (anche i 404)."""
+    kw.setdefault("timeout", 180)
+    retries = 5
+    for attempt in range(retries + 1):
+        try:
+            r = requests.get(url, **kw)
+            if r.status_code in RETRY_STATUS and attempt < retries:
+                _pause(r, attempt)
+                continue
+            r.raise_for_status()
+            return r
+        except (requests.ConnectionError, requests.Timeout) as e:
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+                continue
+            raise RuntimeError(sanitize(str(e))) from None
+        except Exception as e:
+            # from None: l'eccezione originale (con l'URL e la chiave) non resta nel traceback
+            raise RuntimeError(sanitize(str(e))) from None
 
 
 def usd_eur():

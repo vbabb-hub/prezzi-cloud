@@ -1,14 +1,16 @@
 """Oracle Cloud: Price List API pubblica (Cost Estimator, anonima, nessuna chiave), prezzi in EUR. Il listino è globale
 (Milano inclusa). Compute Standard E4 ed E5 Flex (1 OCPU = 2 vCPU; prezzo = OCPU/ora + GB di RAM/ora, 4 GB per vCPU,
-senza storage), Block Volume, Object Storage, traffico in uscita e GPU. Se una voce non si trova nel listino non viene
-inventata: finisce tra gli avvisi di status.json. Verificare il formato al primo run."""
+senza storage), Block Volume, Object Storage, traffico in uscita e GPU. Le voci si riconoscono per nome e, per storage, anche
+per codice prodotto (B91961 Block Volume, B91628 Object Storage). Se una voce non si trova non viene inventata: finisce tra
+gli avvisi di status.json insieme ai nomi simili trovati, per correggere il riconoscimento."""
 import re
-from common import get, vm, usd_eur, sanitize, TIERS
+from common import get, vm, usd_eur, TIERS
 
 URL = "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=EUR"
 REGION = "globale (Milano inclusa)"
 FLEX = ("E4", "E5")
 GPU_KEYS = ("H200", "H100", "A100", "A10", "L40S", "V100", "P100", "B200")
+PART_BLOCK, PART_OBJECT = "B91961", "B91628"
 WARNINGS = []
 
 
@@ -39,8 +41,9 @@ def collect():
 
     ocpu, mem, out = {}, {}, []
     found = {"block": None, "object": None, "egress": None}
+    near = {"block": [], "object": [], "egress": []}
     for it in items:
-        n, metric = it.get("displayName", ""), it.get("metricName", "") or ""
+        n, metric, part = it.get("displayName", ""), it.get("metricName", "") or "", it.get("partNumber", "")
         if "Windows" in n:
             continue
         for f in FLEX:
@@ -48,9 +51,15 @@ def collect():
                 ocpu[f] = _first(it, fx)
             elif re.search(rf"Standard\s*[-–]\s*{f}\s*[-–]\s*Memory", n):
                 mem[f] = _first(it, fx)
-        if re.match(r"Block Volume\s*[-–]\s*Storage", n):
+        if "Block Volume" in n:
+            near["block"].append(n)
+        if "Object Storage" in n:
+            near["object"].append(n)
+        if "Outbound" in n:
+            near["egress"].append(n)
+        if part == PART_BLOCK or re.search(r"Block Volume\s*[-–]\s*Storage", n):
             found["block"] = _first(it, fx)
-        elif re.match(r"Object Storage\s*[-–]\s*Storage", n) and not re.search(r"Infrequent|Archive", n):
+        elif part == PART_OBJECT or (re.search(r"Object Storage\s*[-–]\s*Storage", n) and not re.search(r"Infrequent|Archive|Request", n)):
             found["object"] = _first(it, fx)
         elif re.search(r"Outbound Data Transfer", n, re.I):
             pos = [v for _, v in _tiers(it, fx) if v > 0]
@@ -75,5 +84,5 @@ def collect():
         if found[key]:
             out.append(dict(provider="Oracle Cloud", region=REGION, kind=kind, sku=sku, unit=unit, price=round(found[key], 5), term="On-demand", source=URL))
         else:
-            WARNINGS.append(f"{sku}: voce non trovata nel listino")
+            WARNINGS.append(f"{sku}: voce non trovata nel listino (nomi simili: {'; '.join(dict.fromkeys(near[key]))[:140] or 'nessuno'})")
     return out
