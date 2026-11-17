@@ -1,10 +1,9 @@
 {
  "azure": {
   "ok": true,
-  "count": 286,
+  "count": 482,
   "date": "2026-11-17",
-  "verified_schema": 1,
-  "note": "compute italynorth: 429 Client Error: Too Many Requests for url: https://prices.azure.com/api/retail"
+  "verified_schema": 1
  },
  "aws": {
   "ok": true,
@@ -33,10 +32,9 @@
  },
  "oracle": {
   "ok": true,
-  "count": 28,
+  "count": 30,
   "date": "2026-11-17",
-  "verified_schema": 1,
-  "note": "Block Volume: voce non trovata nel listino; Object Storage Standard: voce non trovata nel listino"
+  "verified_schema": 1
  },
  "vultr": {
   "ok": true,
@@ -59,7 +57,7 @@
   "count": 113,
   "date": "2026-11-17",
   "verified_schema": 1,
-  "note": "verifica online non riuscita (404 Client Error: Not Found for url: https://enterprise.aruba.it/documents/tc-fi)"
+  "note": "listino online non letto (nessuna versione del listino trovata da ARB-11761 in avanti): uso la tabella ARB-11761-1 del 24/08/2026; cerca la nuova versione su enterprise.aruba.it"
  },
  "psn": {
   "ok": true,
