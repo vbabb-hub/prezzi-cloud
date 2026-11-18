@@ -24,10 +24,9 @@
  },
  "hetzner": {
   "ok": true,
-  "count": 17,
+  "count": 18,
   "date": "2026-11-18",
-  "verified_schema": 1,
-  "note": "pricing: 'traffic'"
+  "verified_schema": 1
  },
  "oracle": {
   "ok": true,
@@ -56,7 +55,7 @@
   "count": 113,
   "date": "2026-11-18",
   "verified_schema": 1,
-  "note": "listino online non letto (nessuna versione del listino trovata da ARB-11761 in avanti): uso la tabella ARB-11761-1 del 24/08/2026; cerca la nuova versione su enterprise.aruba.it"
+  "note": "listino online non letto (il sito non fornisce il documento ai server di GitHub (HTTP 404, server ?, 32047 caratteri; anche le versioni precedenti non rispondono): probabile blocco, verifica a mano); uso la tabella ARB-11761-1 del 24/08/2026"
  },
  "psn": {
   "ok": true,
