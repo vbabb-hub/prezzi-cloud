@@ -7,7 +7,8 @@ Per questo il collector (1) prova l'ultima versione nota, (2) se non c'è più c
 per codice servizio (Cep-0002, Stp-0012...). Le tabelle sotto sono il ripiego: valori letti da ARB-11761-1 (valida dal 24/08/2026), usati
 solo per le voci che il documento online non permette di leggere, con un avviso in status.json."""
 import re, time, html as htmllib
-from common import get, vm, sanitize
+import requests
+from common import vm, sanitize
 
 LAST_KNOWN = 11761                 # numero dell'ultima versione vista (ARB-11761-1)
 STATIC_VERSION, STATIC_VALID = "ARB-11761-1", "24/08/2026"
@@ -87,26 +88,52 @@ def parse_listino(raw):
     return ver, valid, rows
 
 
+KNOWN = [11761, 11740, 11707]     # versioni già viste online (dalla più recente)
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+           "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+           "Referer": "https://enterprise.aruba.it/"}
+
+
+def _probe(n, s=1):
+    """Una richiesta al documento: (codice HTTP, testo, diagnosi). Un 404 o un 403 non sono eccezioni: servono a capire cosa risponde il sito."""
+    try:
+        r = requests.get(BASE.format(n, s), headers=HEADERS, timeout=40)
+    except requests.RequestException as e:
+        return None, "", f"rete: {type(e).__name__}"
+    return r.status_code, r.text, f"HTTP {r.status_code}, server {r.headers.get('server', '?')}, {len(r.text)} caratteri"
+
+
 def _fetch_listino():
-    """Trova e legge la versione corrente. Restituisce (url, versione, valido dal, righe) o solleva RuntimeError."""
-    def try_url(n, s=1):
-        try:
-            return get(BASE.format(n, s), headers={"User-Agent": "Mozilla/5.0"}, timeout=60).text
-        except RuntimeError as e:
-            if str(e).startswith("404") or "404" in str(e)[:20]:
-                return None
-            raise
-    for n in range(LAST_KNOWN, LAST_KNOWN + SEARCH_AHEAD + 1):
+    """Legge la versione corrente del listino. Restituisce (url, versione, valido dal, righe) o solleva RuntimeError con la diagnosi."""
+    status, raw, diag = _probe(KNOWN[0])
+    if status == 200:
+        ver, valid, rows = parse_listino(raw)
+        if rows:
+            return BASE.format(KNOWN[0], 1), ver, valid, rows
+        inizio = re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", " ", raw)))[:90]
+        raise RuntimeError(f"documento ricevuto ({diag}) ma tabella dei prezzi non riconosciuta; inizio testo: {inizio}")
+    # la versione più recente non risponde: il sito è raggiungibile? (provo le versioni precedenti, già viste online)
+    older = None
+    for n in KNOWN[1:]:
+        st, rw, dg = _probe(n)
+        if st == 200:
+            ver, valid, rows = parse_listino(rw)
+            if rows:
+                older = (BASE.format(n, 1), ver, valid, rows)
+                break
+    if older is None:
+        if "rete:" in diag:
+            raise RuntimeError(f"sito non raggiungibile ({diag})")
+        raise RuntimeError(f"il sito non fornisce il documento ai server di GitHub ({diag}; anche le versioni precedenti non rispondono): probabile blocco, verifica a mano")
+    for n in range(KNOWN[0] + 1, KNOWN[0] + SEARCH_AHEAD + 1):      # c'è una versione più recente di quella nota?
         for s in (1, 2):
-            raw = try_url(n, s)
-            if raw and "Listino per il Mercato Enterprise" in raw:
-                ver, valid, rows = parse_listino(raw)
-                if not rows:
-                    raise RuntimeError(f"documento ARB-{n}-{s} letto ma tabella dei prezzi non riconosciuta (formato cambiato?)")
-                return BASE.format(n, s), ver, valid, rows
-        if n > LAST_KNOWN:
-            time.sleep(0.05)
-    raise RuntimeError(f"nessuna versione del listino trovata da ARB-{LAST_KNOWN} in avanti")
+            st, rw, dg = _probe(n, s)
+            if st == 200:
+                ver, valid, rows = parse_listino(rw)
+                if rows:
+                    return BASE.format(n, s), ver, valid, rows
+        time.sleep(0.05)
+    return older
 
 
 class _Prices:
@@ -130,7 +157,7 @@ def collect():
         url, ver, valid, rows = _fetch_listino()
         ver, valid = ver or STATIC_VERSION, valid or STATIC_VALID
     except Exception as e:
-        err = sanitize(str(e))[:110]
+        err = sanitize(str(e))[:230]
     P = _Prices(rows)
     src = url or BASE.format(LAST_KNOWN, 1)
 
@@ -182,7 +209,7 @@ def collect():
     out.append(rec("licenza", "Windows Server per vCPU (Cloud Server PRO)", "EUR/vCPU/mese", P.get("Cep-0022", 1, 13.01), "cs", "importo soggetto a variazione (art. 18.1)"))
     out.append(rec("licenza", "Remote Desktop Services 5 SAL (min. 5)", "EUR/mese", P.get("Cep-0025", 1, 65.49), "cs", "importo soggetto a variazione (art. 18.1)"))
     if err:
-        WARNINGS.append(f"listino online non letto ({err}): uso la tabella {STATIC_VERSION} del {STATIC_VALID}; cerca la nuova versione su enterprise.aruba.it")
+        WARNINGS.append(f"listino online non letto ({err}); uso la tabella {STATIC_VERSION} del {STATIC_VALID}")
     else:
         if ver != STATIC_VERSION:
             WARNINGS.append(f"letta la versione {ver} dal {valid} (la tabella di ripiego è {STATIC_VERSION}): aggiornare LAST_KNOWN")
