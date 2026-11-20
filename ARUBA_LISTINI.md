@@ -2,7 +2,7 @@
 
 Nel sito compaiono due provider distinti, perché Aruba ha due listini con prezzi diversi.
 
-| | **Aruba Cloud** (pubblico) | **Aruba Cloud Enterprise** |
+| | **Aruba Cloud** (pubblico) | **Aruba Enterprise** |
 |---|---|---|
 | Fonte | cloud.it/prezzi, letto il 27/10/2026 | "Listino per il Mercato Enterprise" (enterprise.aruba.it), versione ARB-11761-1 valida dal 24/08/2026; Aruba lo aggiorna ogni mese e il collector legge la versione corrente |
 | Per chi | acquisto diretto online | enterprise e PA: servizi con qualifica ACN (ogni voce riporta ID e livello, per esempio IA-418 QC1) |

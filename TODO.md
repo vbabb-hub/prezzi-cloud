@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-10 (passo 8, seconda iterazione).
+Ultimo aggiornamento: 2026-11-18 (provider rinominato in Aruba Enterprise).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -35,8 +35,8 @@ Ultimo aggiornamento: 2026-11-10 (passo 8, seconda iterazione).
   - **Mai provato su rete reale.** Da controllare al primo run: righe `stackit`, `exoscale`, `ovh` in `docs/data/status.json`; in `latest.json` ora devono comparire GPU e storage OVHcloud.
 
 - [x] **Passo 3C: Aruba Enterprise e Polo Strategico Nazionale.**
-  - `aruba_enterprise.py`: provider **"Aruba Cloud Enterprise"** dal "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026): Cloud Server PRO (12 taglie, on-demand e 1 anno), Cloud VPS, Virtual Data Center, Kubernetes gestito, DBaaS, server con GPU (on-demand, 1 e 3 anni), storage, rete, licenze. Ogni voce riporta versione del listino e qualifica ACN. Provider separato dal pubblico "Aruba Cloud" (`aruba.py`, note ora con "Listino pubblico cloud.it"). Confronto in `ARUBA_LISTINI.md`.
-  - `psn.py`: **"Polo Strategico Nazionale"**, listino Industry Standard dal 30/04/2026 (canone annuale, 36 voci): IaaS Shared VM (da Tiny a X-Large) e Pool con e senza HA, risorse aggiuntive, IaaS Private Blade, CaaS (Kubernetes), database PaaS, licenze (Windows Server, Red Hat). Compaiono come "Impegno 1 anno" (canone annuale). **Location `IT`** sia per PSN sia per Aruba Cloud Enterprise.
+  - `aruba_enterprise.py`: provider **"Aruba Enterprise"** dal "Listino per il Mercato Enterprise" ARB-11740-1 (valido dal 03/08/2026): Cloud Server PRO (12 taglie, on-demand e 1 anno), Cloud VPS, Virtual Data Center, Kubernetes gestito, DBaaS, server con GPU (on-demand, 1 e 3 anni), storage, rete, licenze. Ogni voce riporta versione del listino e qualifica ACN. Provider separato dal pubblico "Aruba Cloud" (`aruba.py`, note ora con "Listino pubblico cloud.it"). Confronto in `ARUBA_LISTINI.md`.
+  - `psn.py`: **"Polo Strategico Nazionale"**, listino Industry Standard dal 30/04/2026 (canone annuale, 36 voci): IaaS Shared VM (da Tiny a X-Large) e Pool con e senza HA, risorse aggiuntive, IaaS Private Blade, CaaS (Kubernetes), database PaaS, licenze (Windows Server, Red Hat). Compaiono come "Impegno 1 anno" (canone annuale). **Location `IT`** sia per PSN sia per Aruba Enterprise.
   - Verifica dei prezzi PSN: le voci IaaS Shared, Blade e CaaS Licensed Medium hanno tutte un rapporto costante di +0,89% rispetto alla release di maggio 2025: conferma che l'abbinamento è giusto (prima erano 5 voci non confermate). Restano **11 voci abbinate solo per posizione** (nota "da verificare"): CaaS Licensed Large, i 7 database PaaS e le 3 licenze.
   - **Correzione**: nel messaggio del passo 3B avevo scritto che il listino Enterprise dava "VPS O2A4 a 41,70 EUR/mese": era una lettura sbagliata del risultato di ricerca. 41,70 è il Cloud Server PRO **O4A8** (0,05712 EUR/h); il VPS O2A4 costa 9,21 EUR/mese. I confronti corretti sono in `ARUBA_LISTINI.md`.
   - **Mai provato su rete reale.** Da controllare al primo run: righe `aruba-enterprise` e `psn` in `docs/data/status.json` (per Aruba Enterprise l'avviso `note` dice se i prezzi non sono più sulla pagina).
@@ -80,6 +80,8 @@ Ultimo aggiornamento: 2026-11-10 (passo 8, seconda iterazione).
   - **Seconda iterazione (log successivo)**: Azure ora legge 482 voci, GCP 44 (la chiave funziona), Oracle 30 senza avvisi. Aruba Enterprise però non trova nemmeno ARB-11761-1: **il mio sospetto che Aruba tolga le versioni vecchie era probabilmente sbagliato**, perché 11740-1 e 11761-1 risultano entrambe online da fuori GitHub; più verosimile un blocco o un 404 verso i server di GitHub. Ora il collector prova la versione nota, controlla se il sito risponde per le versioni precedenti e **non scansiona più** i numeri successivi in caso di blocco (3 richieste invece di 240); l'avviso riporta codice HTTP, server e il tipo di problema (blocco, rete, tabella non riconosciuta). Intanto i prezzi vengono dalla tabella ARB-11761-1.
   - **Hetzner**: l'avviso `pricing: 'traffic'` era vero: l'API non ha più quella chiave. Il prezzo del traffico extra si legge ora dai prezzi di ogni tipo di server (`price_per_tb_traffic`), e nelle note compare il traffico incluso (per esempio 20 TB).
   - Provato con risposte simulate (compresa una nuova versione del listino Aruba con prezzi cambiati e un valore assurdo scartato), non con le API reali. Da controllare al prossimo run: righe `aruba-enterprise` (nota), `azure` (le voci devono includere `italynorth`), `oracle` (nessun avviso su Block Volume e Object Storage).
+
+- [x] **Rinomina del provider: "Aruba Cloud Enterprise" diventa "Aruba Enterprise".** Cambiato in `aruba_enterprise.py`, nella mappa delle bandiere di `docs/app.js` (senza questa modifica comparirebbe il globo al posto della bandiera italiana) e nei documenti. `run.py` ha ora una tabella `RENAMES` che porta nel nuovo nome lo storico dei prezzi già raccolto (`series.json`) e le voci precedenti, così non si perde nulla. Il nome "Aruba Cloud" (listino pubblico) non cambia. `sw.js` passa a v11.
 
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
