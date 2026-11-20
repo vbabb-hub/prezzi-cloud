@@ -20,7 +20,7 @@ const matrixTerms = [["on-demand", "On-demand"], ["1 anno", "Impegno 1 anno"], [
 const matrixRatios = [2, 4, 8];
 const matrixOn = () => state.category === "compute" && state.mode === "matrix";
 
-const flags = {"aruba cloud": "🇮🇹", "aruba cloud enterprise": "🇮🇹", "polo strategico nazionale": "🇮🇹", "seeweb": "🇮🇹", "enter cloud suite": "🇮🇹",
+const flags = {"aruba cloud": "🇮🇹", "aruba enterprise": "🇮🇹", "polo strategico nazionale": "🇮🇹", "seeweb": "🇮🇹", "enter cloud suite": "🇮🇹",
                "aws": "🇺🇸", "azure": "🇺🇸", "gcp": "🇺🇸", "digitalocean": "🇺🇸", "vultr": "🇺🇸", "oracle cloud": "🇺🇸", "akamai linode": "🇺🇸",
                "vmware": "🇺🇸", "nutanix": "🇺🇸", "hetzner": "🇩🇪", "stackit": "🇩🇪", "ionos": "🇩🇪", "proxmox ve": "🇦🇹", "ovhcloud": "🇫🇷",
                "scaleway": "🇫🇷", "exoscale": "🇨🇭"};
