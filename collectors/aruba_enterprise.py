@@ -1,4 +1,4 @@
-"""Aruba Cloud Enterprise: "Listino per il Mercato Enterprise" (enterprise.aruba.it), IVA esclusa. NON è il listino pubblico di cloud.it
+"""Aruba Enterprise: "Listino per il Mercato Enterprise" (enterprise.aruba.it), IVA esclusa. NON è il listino pubblico di cloud.it
 (quello è in aruba.py, provider "Aruba Cloud"): è il listino dei servizi con qualifica ACN per enterprise e PA, con impegni (1 anno circa -10%,
 3 anni solo sui server dedicati) e SLA propri. Confronto tra i due: ARUBA_LISTINI.md.
 
@@ -13,7 +13,7 @@ from common import vm, sanitize
 LAST_KNOWN = 11761                 # numero dell'ultima versione vista (ARB-11761-1)
 STATIC_VERSION, STATIC_VALID = "ARB-11761-1", "24/08/2026"
 BASE = "https://enterprise.aruba.it/documents/tc-files/it/arb-{}-{}_cloud_listino.aspx"
-PROVIDER, REGION = "Aruba Cloud Enterprise", "IT"
+PROVIDER, REGION = "Aruba Enterprise", "IT"
 SEARCH_AHEAD = 120                 # quanti numeri provare in avanti se l'ultima versione nota non esiste più
 WARNINGS = []
 

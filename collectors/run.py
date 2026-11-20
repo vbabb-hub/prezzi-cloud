@@ -12,7 +12,12 @@ today = dt.datetime.now(dt.timezone.utc).date().isoformat()
 def load(p, default):
     return json.loads(p.read_text()) if p.exists() else default
 
+# Provider rinominati: vecchio nome -> nuovo nome (le voci e lo storico dei prezzi passano al nome nuovo)
+RENAMES = {"Aruba Cloud Enterprise": "Aruba Enterprise"}
+
 prev = load(DATA / "latest.json", {"records": []})["records"]
+for _r in prev:
+    _r["provider"] = RENAMES.get(_r.get("provider"), _r.get("provider"))
 old_status = load(DATA / "status.json", {})
 status, records = {}, []
 
@@ -80,6 +85,13 @@ for f in sorted((ROOT / "manual").glob("*.yml")):
 status["manual"] = dict(ok=True, count=manual, date=today, da_compilare=len(todo))
 
 series = load(DATA / "series.json", {})
+for _k in list(series):
+    for _old, _new in RENAMES.items():
+        if _k.startswith(_old + "|"):
+            _nk = _new + _k[len(_old):]
+            _pts = {d: p for d, p in series.pop(_k)}
+            _pts.update({d: p for d, p in series.get(_nk, [])})
+            series[_nk] = sorted([d, p] for d, p in _pts.items())
 for r in records:
     r["key"] = "|".join(str(r.get(k, "")) for k in ("provider", "region", "kind", "sku")) + ("|" + r["term"] if r.get("term") else "")
     s = series.setdefault(r["key"], [])
