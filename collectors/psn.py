@@ -1,61 +1,124 @@
-"""Polo Strategico Nazionale (PSN): listino ufficiale "Industry Standard", validità dal 30/04/2026, canone ANNUALE in EUR (PA italiane).
-Dal PDF si leggono le etichette e le colonne dei prezzi separate: i valori sono stati abbinati per posizione. Controllo di coerenza:
-tutte le voci IaaS Shared, Blade e CaaS Licensed Medium hanno un rapporto costante di +0,89% rispetto alla release di maggio 2025 (stesso
-abbinamento), e le voci "conf." hanno anche un riscontro diretto nel testo. Le voci "pos." sono abbinate solo per posizione: vedi TODO.md.
-Non inclusi (abbinamento non affidabile): tipologie Premium, IaaS Private a nodi, GPU H100, storage, sicurezza, backup, AI, housing.
-Il listino PSN cambia spesso (2024, 2025, gennaio e aprile 2026): la tabella va riletta a ogni release. Prezzo di partenza della convenzione."""
+"""Polo Strategico Nazionale (PSN): listino ufficiale, canoni ANNUALI in EUR per le PA italiane.
+I dati stanno in collectors/psn_listino.json, generato da tools/import_psn.py dal file Excel del PSN (ogni release si importa con un solo
+comando). Si leggono tre fogli: il catalogo "Industry Standard-Integrazione" (housing, hosting, compute, GPU, Kubernetes, storage, sistemi
+operativi, rete, sicurezza, database, middleware, protezione dati, infrastruttura e operations, big data, AI, VDI, collaboration, supporto),
+"Hybrid Cloud on PSN site" e i servizi professionali. Il prezzo mostrato è il canone annuale diviso 12 (per le GPU, diviso 8.760 ore; per
+lo storage con quantità in GB, per GB al mese); il canone annuale originale è nella nota. Le voci "non appena disponibili" non hanno prezzo e non
+sono incluse. Non letti: i cataloghi dei grandi provider rivenduti dal PSN (Secure Public Cloud) e Public Cloud PSN Managed."""
+import json
+import pathlib
+import re
+from collections import Counter
 from common import vm
 
-URL = "https://www.polostrategiconazionale.it/app/uploads/2026/04/Listino-Polo-Strategico-Nazionale_v30_04_2026.pdf"
+DATA = pathlib.Path(__file__).with_name("psn_listino.json")
 PROVIDER, REGION = "Polo Strategico Nazionale", "IT"
-VERSION, VALID_FROM, VERIFIED = "v30/04/2026", "30/04/2026", "2026-11-05"
+URL = "https://www.polostrategiconazionale.it/"
+HOURS_YEAR = 8760
 WARNINGS = []
 
-# (elemento, vCPU, RAM GB, storage GB, canone annuo senza HA, canone annuo con HA; None = voce non disponibile/non abbinata)
-IAAS_SHARED = [("VM Tiny", 1, 2, 100, 184.2384677, None), ("VM Small", 2, 4, 100, 302.3593007, 451.3381970), ("VM Medium", 4, 8, 100, 592.9471102, 872.2825408),
-               ("VM Large", 8, 16, 100, 1101.7024323, 1610.7136614), ("VM X-Large", 16, 32, 100, 3436.3094778, 5006.7225968),
-               ("Pool Small", 8, 32, None, 1032.3113612, 1572.6820272), ("Pool Medium", 16, 64, None, 1875.4929892, 2875.1787214),
-               ("Pool Large", 32, 128, None, 3315.8057605, 4963.8025369), ("Pool XLarge", 64, 256, None, 7400.3265713, 11126.6303936)]
-EXTRA = [("1 vCPU aggiuntiva", "EUR/mese per vCPU", 46.5571998, 66.6614452), ("1 GB RAM aggiuntivo", "EUR/mese per GB", 23.8076590, 33.8597817)]
-# IaaS Private a blade (host fisico dedicato): (nome, core, RAM GB, canone annuo)
-BLADE = [("Blade Medium", 24, 256, 4114.7598807), ("Blade Large", 36, 768, 5910.4649689)]
-# CaaS (Kubernetes): (nome, unità, canone annuo, riscontro)
-CAAS = [("CaaS Licensed Medium (host 24 core / 256 GB, Tanzu Basic)", "EUR/mese per host", 4702.1464156, "conf."),
-        ("CaaS Licensed Large (host 36 core / 768 GB, Tanzu Basic)", "EUR/mese per host", 11166.8715222, "pos."),
-        ("CaaS Open Source", "EUR/mese per vCPU", 470.2146415, "conf.")]
-# Database PaaS (istanza, licenza inclusa), sistemi operativi e backup: abbinati solo per posizione
-DBAAS = [("PaaS SQL MySQL", 1592.1672609), ("PaaS SQL PostgreSQL", 1556.2782447), ("PaaS SQL SQL Server", 4520.3847131),
-         ("PaaS SQL Oracle Enterprise", 14004.8728843), ("PaaS SQL Oracle Standard", 6281.5973966), ("PaaS DB MongoDB", 3312.4009194), ("PaaS SQL MariaDB", 1000.6512806)]
-LICENSES = [("Windows Server Standard (2 core)", "EUR/mese", 122.0961245), ("Red Hat Enterprise Linux per VM", "EUR/mese", 569.7819147),
-            ("Red Hat Enterprise Linux per bare metal (2 socket)", "EUR/mese", 1017.4677047)]
+
+def _it(x, d=2):
+    return f"{x:,.{d}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def _r(kind, sku, unit, annual, note, v=None, ram=None):
-    d = dict(provider=PROVIDER, region=REGION, kind=kind, sku=sku, unit=unit, price=round(annual / 12, 2), term="Impegno 1 anno", source=URL,
-             note=f"canone annuale {annual:,.2f} EUR; Industry Standard, listino di partenza {VERSION}; {note}")
-    if v:
-        d["vcpu"], d["ram_gb"] = v, ram
-    return d
+def _num(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def kind_of(fam, sub):
+    f, s = (fam or "")[:2], (sub or "").upper()
+    if f == "00":
+        return "colocation"
+    if f == "01":
+        return {"SECURITY": "servizi", "STORAGE": "storage"}.get(s, "compute")
+    if f == "02":
+        if "GPU" in s:
+            return "gpu"
+        return "k8s" if (s.startswith("CAAS") or "KUBERNETES" in s) else "compute"
+    return {"03": "storage", "04": "licenza", "05": "rete", "07": "dbaas"}.get(f, "servizi")
+
+
+def _gb(row):
+    """Quantità in GB a cui si riferisce il canone di una voce di storage, se ricavabile."""
+    m = re.match(r"^(\d+(?:[.,]\d+)?)\s*(GB|TB)\b", str(row.get("mu") or ""), re.I)
+    if m:
+        q = float(m.group(1).replace(",", ".")) * (1000 if m.group(2).upper() == "TB" else 1) * (float(row["mv"]) if _num(row.get("mv")) else 1)
+        return q or None
+    m = re.search(r"\((\d+)\s*GB\)", str(row.get("el") or ""))
+    if m:
+        return float(m.group(1))
+    st = row.get("storage")
+    return float(st) if _num(st) and not row.get("mu") else None
+
+
+def _tier(t):
+    return re.sub(r"^\d+\.\s*", "", t or "").title()
 
 
 def collect():
     WARNINGS.clear()
+    d = json.loads(DATA.read_text(encoding="utf-8"))
+    rel = d.get("release", "")
+    entries, n_na = [], 0
+    for row in d["industry"]:
+        canone, ut = row.get("canone"), row.get("ut")
+        if not _num(canone):
+            n_na += 1
+            continue
+        kind = kind_of(row.get("fam"), row.get("sub"))
+        el, tip, listino = row.get("el") or "", row.get("tip") or "", row.get("listino") or ""
+        partenza = listino.upper().startswith("LISTINO DI PARTENZA")
+        sku = f"{tip} - {el}" if partenza and tip and tip.lower() not in el.lower() else el
+        mu, mv = row.get("mu"), row.get("mv")
+        if kind == "gpu" and mu:                                   # il nome della GPU è nella metrica ("GPU H100", "GPU H100 condivisa (25%)")
+            sku = f"{mu} (dedicata)" if "condivisa" not in str(mu).lower() else str(mu)
+        if "(HA)" in str(row.get("sub") or "") and "(HA)" not in sku:
+            sku += " (HA)"
+        metric = f"{mv:g} {mu}"[:44] if mu and _num(mv) else (str(mu)[:44] if mu else "")
+        term = "Impegno 1 anno"
+        if canone == 0 and _num(ut) and ut > 0:
+            unit, price, term = "EUR una tantum", ut, "On-demand"
+        elif kind == "gpu":
+            unit, price = "EUR/ora", canone / HOURS_YEAR
+        elif kind == "storage" and _gb(row):
+            unit, price = "EUR/GB/mese", canone / 12 / _gb(row)
+        else:
+            unit, price = "EUR/mese", canone / 12
+        note = "; ".join(x for x in (
+            "listino di partenza" if partenza else "prima integrazione", f"{row.get('fam')} / {row.get('sub')}", f"tier {_tier(row.get('tier'))}" if row.get("tier") else "",
+            f"metrica: {metric}" if metric else "", f"canone annuale {_it(canone)} EUR" if unit != "EUR una tantum" else f"una tantum {_it(ut)} EUR",
+            f"PSN {rel}", (row.get("desc") or "")[:120]) if x)
+        entries.append(dict(kind=kind, sku=sku, unit=unit, price=price, term=term, note=note, tier=_tier(row.get("tier")), metric=metric,
+                            vcpu=row.get("vcpu") if _num(row.get("vcpu")) and _num(row.get("vram")) else None, ram=row.get("vram")))
+    for row in d.get("hybrid", []):
+        if not _num(row.get("canone")):
+            continue
+        kind = {"Compute": "compute", "Kubernetes": "k8s", "SQL Data services": "dbaas"}.get(row["tip"], "servizi")
+        extra = "; ".join(str(x) for x in (f"storage {row['storage']} GB" if row.get("storage") else "", row.get("desc") or "") if x)
+        entries.append(dict(kind=kind, sku=f"Hybrid Cloud on PSN site - {row['tip']}: {row['el']}", unit="EUR/mese", price=row["canone"] / 12, term="Impegno 1 anno",
+                            note=f"Hybrid Cloud on PSN site; canone annuale {_it(row['canone'])} EUR; PSN {rel}" + (f"; {extra}" if extra else ""), tier="", metric="", vcpu=None, ram=None))
+    for row in d.get("servizi", []):
+        entries.append(dict(kind="servizi", sku=f"Servizi professionali - {row['fig']}", unit="EUR/giorno", price=row["ut"], term="On-demand",
+                            note=f"tariffa a giornata per persona; attività: {row.get('att') or 'n.d.'}; PSN {rel}", tier="", metric="", vcpu=None, ram=None))
+    # nomi unici: se due voci hanno lo stesso nome si aggiunge prima la metrica, poi il tier, poi un numero
+    for stage in ("metric", "tier", "n"):
+        cnt = Counter((e["kind"], e["sku"], e["term"]) for e in entries)
+        seen = Counter()
+        for e in entries:
+            k = (e["kind"], e["sku"], e["term"])
+            if cnt[k] > 1:
+                seen[k] += 1
+                add = e["metric"] if stage == "metric" else e["tier"] if stage == "tier" else f"#{seen[k]}"
+                if add:
+                    e["sku"] = f"{e['sku']} ({add})"
     out = []
-    for name, v, ram, disk, plain, ha in IAAS_SHARED:
-        for label, annual in (("IaaS Shared", plain), ("IaaS Shared (HA)", ha)):
-            if annual:
-                note = (f"{disk} GB di storage inclusi; " if disk else "pool di risorse; ") + "SO escluso; riscontrato (+0,89% su maggio 2025)"
-                out.append(vm(PROVIDER, REGION, f"{label} {name}", v, ram, annual / 12 / 730, monthly=round(annual / 12, 2), source=URL, term="Impegno 1 anno",
-                              note=f"canone annuale {annual:,.2f} EUR; Industry Standard, listino di partenza {VERSION}; {note}"))
-    for name, unit, plain, ha in EXTRA:
-        for label, annual in (("IaaS Shared", plain), ("IaaS Shared (HA)", ha)):
-            out.append(_r("compute", f"{label} Pool: {name}", unit, annual, "riscontrato (+0,89% su maggio 2025)"))
-    for name, core, ram, annual in BLADE:
-        out.append(_r("compute", f"IaaS Private {name} (host {core} core / {ram} GB)", "EUR/mese per host", annual, "host fisico dedicato; riscontrato (+0,89% su maggio 2025)", core, ram))
-    for name, unit, annual, conf in CAAS:
-        out.append(_r("k8s", name, unit, annual, "riscontrato" if conf == "conf." else "abbinato per posizione, da verificare"))
-    for name, annual in DBAAS:
-        out.append(_r("dbaas", name, "EUR/mese", annual, "licenza inclusa; abbinato per posizione, da verificare"))
-    for name, unit, annual in LICENSES:
-        out.append(_r("licenza", name, unit, annual, "abbinato per posizione, da verificare"))
+    for e in entries:
+        price = round(e["price"], 4 if e["price"] < 1 else 2)
+        if e["vcpu"] and e["kind"] == "compute":
+            out.append(vm(PROVIDER, REGION, e["sku"], int(e["vcpu"]), float(e["ram"]), price / 730, monthly=price, source=URL, term=e["term"], note=e["note"]))
+        else:
+            out.append(dict(provider=PROVIDER, region=REGION, kind=e["kind"], sku=e["sku"], unit=e["unit"], price=price, term=e["term"], source=URL, note=e["note"]))
+    if n_na:
+        WARNINGS.append(f"{n_na} voci 'non appena disponibili' senza prezzo non incluse (release {rel})")
     return out
