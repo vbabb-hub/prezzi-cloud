@@ -1,7 +1,7 @@
 # Prezzi cloud: piano di correzione
 
 Si procede un passo alla volta. Ogni passo concluso viene segnato qui e i punti ancora aperti restano in elenco.
-Ultimo aggiornamento: 2026-11-18 (provider rinominato in Aruba Enterprise).
+Ultimo aggiornamento: 2026-11-22 (PSN completo dal listino Excel di agosto 2026).
 
 ## Fatto
 - [x] **Passo 1: Aruba e Seeweb allineati ai listini ufficiali.**
@@ -83,6 +83,15 @@ Ultimo aggiornamento: 2026-11-18 (provider rinominato in Aruba Enterprise).
 
 - [x] **Rinomina del provider: "Aruba Cloud Enterprise" diventa "Aruba Enterprise".** Cambiato in `aruba_enterprise.py`, nella mappa delle bandiere di `docs/app.js` (senza questa modifica comparirebbe il globo al posto della bandiera italiana) e nei documenti. `run.py` ha ora una tabella `RENAMES` che porta nel nuovo nome lo storico dei prezzi già raccolto (`series.json`) e le voci precedenti, così non si perde nulla. Il nome "Aruba Cloud" (listino pubblico) non cambia. `sw.js` passa a v11.
 
+- [x] **PSN completo dal listino Excel (Release agosto 2026).** Caricato il file ufficiale (Excel e PDF), niente più abbinamenti per posizione dal PDF.
+  - Nuovo `tools/import_psn.py`: converte il foglio Excel in `collectors/psn_listino.json` (`pip install openpyxl`, poi `python tools/import_psn.py FILE.xlsx`); `collectors/psn.py` legge quel JSON. A ogni nuova release del PSN si rilancia l'importatore e si carica il JSON.
+  - **335 voci** (prima 36): housing/colocation 11, compute 49, GPU 3 (H100 dedicata e condivisa al 25% e 50%), Kubernetes 16, storage 22, sistemi operativi e licenze 26, rete 20, database 39, servizi 149 (sicurezza, middleware, protezione dati, infrastruttura e operations, big data, AI, VDI, collaboration, supporto, Hybrid Cloud on PSN site e 45 tariffe di servizi professionali a giornata).
+  - Prezzi: canone annuale diviso 12 (GPU: diviso 8.760 ore; storage con quantità in GB: per GB al mese); il canone annuale originale, la metrica e il tier stanno nella nota di ogni voce. Le voci "una tantum" (per esempio il trasferimento di un server) hanno unità "EUR una tantum".
+  - Conferma: le voci che avevo già inserito dal PDF risultano identiche all'Excel (per esempio VM Small 302,36 e 451,34 con HA), quindi l'abbinamento per posizione era giusto; confermati anche i prezzi del PDF di aprile 2026 per le voci in comune.
+  - Pagina: nuova categoria **Servizi**; riconoscimento storage corretto per i nomi PSN ("Standard Performance", "ST PERFORMANCE" e "HIGH DENSITY" sono standard, "HP PERFORMANCE" e "High Performance" sono ad alte prestazioni). `sw.js` passa a v12.
+  - Non incluse: voci senza prezzo ("non appena disponibili"; il numero compare nelle note di `status.json`) e i cataloghi dei servizi dei grandi provider rivenduti dal PSN (Secure Public Cloud Oracle, GCP, Azure, AWS e Public Cloud PSN Managed: oltre 50.000 righe per singola SKU). Si possono aggiungere in parte (per esempio le istanze di calcolo) se servono per confrontare il prezzo PSN con quello diretto.
+  - Da controllare: la voce "Object storage" del PSN risulta a 0,51 EUR/GB al mese (6.110 EUR l'anno per 1.000 GB), molto più alta di quella del listino di partenza (0,03): è quello che dice l'Excel, ma conviene verificare cosa include.
+
 ## Da fare, in ordine
 - [ ] **Punti aperti emersi dal passo 3** (da decidere)
   - Exoscale: verificare istanze e block storage su una fonte ufficiale; GPU (7 modelli), sconto con impegno a 12 mesi, Kubernetes, database.
@@ -92,9 +101,7 @@ Ultimo aggiornamento: 2026-11-18 (provider rinominato in Aruba Enterprise).
   - IONOS: server con core dedicati e Savings Plan, object storage, traffico. Scaleway: storage e traffico. Hetzner: object storage.
 - [ ] **Aperti emersi dai log**
   - Aruba Enterprise: se anche il prossimo run segnala che il sito non fornisce il documento ai server di GitHub, i prezzi restano quelli della tabella ARB-11761-1 e vanno riletti a mano ogni mese (o caricando il nuovo PDF del listino). L'avviso in `status.json` dice se è un blocco, un errore di rete o un cambio di formato.
-- [ ] **Passo 3C bis: completamenti PSN e Aruba Enterprise** (da decidere)
-  - PSN, non incluso perché il PDF non permette un abbinamento affidabile (etichette e prezzi sono in colonne separate e molte righe non hanno nome): tipologie Premium, IaaS Private a nodi, GPU H100 (dedicata e condivisa), storage a blocchi/NAS/object, sicurezza, backup e DR, AI, big data, housing, connettività, Secure Public Cloud (Oracle, Azure, Google), Hybrid Cloud. **Per completarlo serve il PDF o l'Excel originale del listino: se lo carichi, estraggo le tabelle per intero.**
-  - PSN: VM Tiny con HA non incluso (valore non confermato). Il listino ha molte versioni (2024, 2025, gennaio e aprile 2026): riverificare a ogni release.
+- [ ] **Passo 3C bis: completamenti Aruba Enterprise** (da decidere)
   - Aruba Enterprise: non incluse le voci Windows del Virtual Data Center, VPC 2.0 e Private Cloud VMware HPC, server dedicati senza GPU, backup (Commvault, Veeam), sicurezza (KMS), Plesk.
 - [x] **Passo 7: chiavi GCP e Hetzner.** Fatte: dal log `gcp` legge 44 voci e `hetzner` 17. Restano due pulizie:
   - [ ] **Eliminare `manual/hetzner.yml`**: ora Hetzner arriva dall'API e le voci manuali sono doppioni.
