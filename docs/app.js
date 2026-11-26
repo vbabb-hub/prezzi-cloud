@@ -8,7 +8,7 @@ const state = {records: [], series: {}, status: {}, updated: "", category: "comp
                mode: "table", mterm: "on-demand", ratio: 4, msort: 4, mcells: []};
 
 const categories = [["compute", "Compute"], ["storage", "Storage"], ["rete", "Rete"], ["gpu", "GPU"], ["colocation", "Colocation"],
-                    ["licenses", "Licenze"], ["k8s", "Kubernetes"], ["dbaas", "Database"]];
+                    ["licenses", "Licenze"], ["k8s", "Kubernetes"], ["dbaas", "Database"], ["servizi", "Servizi"]];
 const terms = [["all", "Tutti"], ["on-demand", "On-demand"], ["1 anno", "Impegno 1 anno"], ["3 anni", "Impegno 3 anni"]];
 const storageTypes = [["all", "Tutti i tipi"], ["object", "Object / S3"], ["block-std", "Blocco Standard"], ["block-hp", "Blocco High Performance / SSD"], ["file", "File / NAS / Unified"]];
 const gpuTypes = [["all", "Tutte le GPU"], ["h200", "NVIDIA H200"], ["h100", "NVIDIA H100"], ["a100", "NVIDIA A100"], ["l4", "NVIDIA L4 / L40S"],
@@ -42,7 +42,8 @@ function storageTypeOf(sku) {
   const s = String(sku || "").toLowerCase();
   if (/s3|object|blob|cloud storage|archive/.test(s)) return "object";
   if (/unified|nas|file/.test(s)) return "file";
-  if (/performance|premium|ssd|nvme/.test(s)) return "block-hp";
+  if (/standard performance|st performance|sp encrypted|high density|standard/.test(s)) return "block-std";   // prima delle voci ad alte prestazioni ("Storage Standard Performance")
+  if (/performance|premium|ssd|nvme|\bhp\b/.test(s)) return "block-hp";
   if (/block|disk|disco|volume|standard|gp3|balanced/.test(s)) return "block-std";
   return "other";
 }
